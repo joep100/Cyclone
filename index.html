@@ -45,7 +45,8 @@ a{color:#ffffff}a:hover{color:#ffffff;text-decoration-thickness:3px}
 .menu-bike .wheel{animation:spin-rear 2.8s cubic-bezier(.3,.55,.25,1) .2s both !important;animation-timeline:auto !important}
 .menu-bike .wheel-front{animation-name:spin-front !important}
 @media (prefers-reduced-motion: reduce){.menu-in,.menu-item,.menu-bike,.menu-bike .wheel{animation:none !important}}
-.hud-nav{display:none !important}
+.menu-btn{display:none !important}
+@media (max-width: 900px){.hud-nav{display:none !important}.menu-btn{display:inline-flex !important}}
 .door-tag{align-self:flex-start}
 .door .tag-bar{transform-origin:left;transform:scaleX(.35);transition:transform .45s cubic-bezier(.6,0,.25,1),background-color .2s}
 .door:hover .tag-bar,.door:focus-visible .tag-bar{transform:scaleX(1);background-color:#FFCC00}
@@ -63,6 +64,13 @@ a:focus-visible{outline:3px solid #FFCC00;outline-offset:4px}
 <header style="position: absolute; top: 0; left: 0; right: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 40px; padding: 20.4px clamp(17px, 3.4vw, 54.4px); background: transparent">
 <a href="#" style="display: inline-flex; align-items: center; min-height: 44px"><img src="logo.png" alt="Cyclone home" style="display: block; height: 28px; width: auto"></a>
 <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 26px">
+<nav aria-label="Primary" class="hud-nav" style="font-family: 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, monospace; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 26px; font-size: 12px; font-weight: 500; letter-spacing: 0.06em">
+<a href="#book2" class="hud-link" data-k="BOOK" data-v="NOW" aria-label="Book a courier" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: #ffffff; text-decoration: none; white-space: nowrap"><span aria-hidden="true"><span class="k">BOOK</span><span style="color: #8a8a8a"> / </span><span class="v" style="color: #b8b8b8">NOW</span></span></a>
+<a href="#track2" class="hud-link" data-k="TRACK" data-v="LIVE" aria-label="Track a delivery" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: #ffffff; text-decoration: none; white-space: nowrap"><span aria-hidden="true"><span class="k">TRACK</span><span style="color: #8a8a8a"> / </span><span class="v" style="color: #b8b8b8">LIVE</span></span></a>
+<a href="#why2" class="hud-link" data-k="WHY" data-v="CYCLONE" aria-label="Why Cyclone" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: #ffffff; text-decoration: none; white-space: nowrap"><span aria-hidden="true"><span class="k">WHY</span><span style="color: #8a8a8a"> / </span><span class="v" style="color: #b8b8b8">CYCLONE</span></span></a>
+<a href="tel:014757000" class="hud-link" data-k="CALL" data-v="01 475 7000" aria-label="Call 01 475 7000" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: #ffffff; text-decoration: none; white-space: nowrap"><span aria-hidden="true"><span class="k">CALL</span><span style="color: #8a8a8a"> / </span><span class="v" style="color: #b8b8b8">01 475 7000</span></span></a>
+<a href="#" class="hud-link" data-k="LOG IN" data-v="ACCOUNT" aria-label="Log in" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: #ffffff; text-decoration: none; white-space: nowrap"><span aria-hidden="true"><span class="k">LOG IN</span><span style="color: #8a8a8a"> / </span><span class="v" style="color: #b8b8b8">ACCOUNT</span></span></a>
+</nav>
 
 <div style="display: flex; align-items: center; gap: 12px">
 <a href="#join2" class="route" style="position: relative; display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px; border: 1px solid #5c5c5c; color: #ffffff; text-decoration: none; font-family: 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap">
@@ -426,6 +434,25 @@ a:focus-visible{outline:3px solid #FFCC00;outline-offset:4px}
     requestAnimationFrame(renderHud);
   }
   if (layer && video) requestAnimationFrame(renderHud);
+
+
+  // ---------- HUD navigation: letters decode on hover ----------
+  document.querySelectorAll('.hud-link').forEach(function (a) {
+    var k = a.dataset.k, v = a.dataset.v, kEl = a.querySelector('.k'), vEl = a.querySelector('.v'), timer = null;
+    function run() {
+      if (reduce) return;
+      var f = 0, total = 11;
+      clearInterval(timer);
+      timer = setInterval(function () {
+        f++;
+        var mix = function (s) { return s.split('').map(function (c, i) { return (c === ' ' || c === '/' || i < s.length * f / total) ? c : CHARS[Math.floor(Math.random() * CHARS.length)]; }).join(''); };
+        if (f >= total) { clearInterval(timer); kEl.textContent = k; vEl.textContent = v; }
+        else { kEl.textContent = mix(k); vEl.textContent = mix(v); }
+      }, 34);
+    }
+    a.addEventListener('mouseenter', run);
+    a.addEventListener('focus', run);
+  });
 
   // ---------- Full-screen menu ----------
   var menu = document.getElementById('site-menu');
