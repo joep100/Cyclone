@@ -4,9 +4,9 @@ Homepage for Cyclone Couriers. A static site: no build step needed.
 
 ## Files
 - `index.html` — the whole homepage (styles and scripts included)
-- `assets/hero.mp4` — hero video (1080p, labels added live by the page)
-- `assets/poster.jpg` — still shown while the video loads
-- `assets/logo.png` — Cyclone logo
+- `hero.mp4` — hero video (1080p, labels added live by the page)
+- `poster.jpg` — still shown while the video loads
+- `logo.png` — Cyclone logo
 
 ## Deploying on Vercel
 Import this repo into Vercel as a new project. Framework preset: **Other**. No build command, no output directory. Vercel serves `index.html` as the homepage.
