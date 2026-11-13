@@ -282,9 +282,12 @@
     });
 
     var chosen = VEHICLES.filter(function (v) { return v.id === selected; })[0];
-    var m = formatMass(chosen.gPerKm * km / SHARE);
-    figure.innerHTML = m.number + "<small>" + m.unit + " CO₂</small>";
-    line.textContent = "One " + formatKm(km) + " km Shared delivery by " + chosen.name.toLowerCase() + ".";
+    // lead with the saving people can picture, then the grams for those who want them
+    var pct = Math.round((1 - 1 / SHARE) * 100);
+    var share = chosen.gPerKm * km / SHARE, saved = chosen.gPerKm * km - share;
+    figure.innerHTML = "Around " + pct + "%<small>less CO₂</small>";
+    line.textContent = "Your share of this " + formatKm(km) + " km run by " + chosen.name.toLowerCase() +
+      " is about " + massText(share) + " of CO₂, a saving of around " + massText(saved) + ", because the journey is shared with other deliveries.";
   }
 
   kmInput.addEventListener("input", function () {
