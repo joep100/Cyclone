@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en-IE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Carbon Share calculator | Cyclone Couriers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:ital,wght@0,700;1,800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  /* The Cyclone site is black in every setting, so both themes use the same palette. */
+  :root {
+    --bg: #000000;
+    --panel: #0d0d0d;
+    --ink: #ffffff;
+    --muted: #a8a8a8;
+    --track: #1c1c1c;
+    --bar: #5a5a5a;
+    --line: #2e2e2e;
+    --accent: #FFCC00;
+    --on-accent: #000000;
+    color-scheme: dark;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #000000; --ink: #ffffff; color-scheme: dark; }
+  }
+  :root[data-theme="dark"] { --bg: #000000; --ink: #ffffff; color-scheme: dark; }
+
+  *, *::before, *::after { box-sizing: inherit; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
+    font-size: 1.0625rem;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono {
+    font-family: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-weight: 700;
+    font-size: 0.8125rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .page { max-width: 52rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .wordmark {
+    font-family: "Inter Tight", "Inter", Arial, sans-serif;
+    font-style: italic; font-weight: 800; font-size: 1.75rem; letter-spacing: -0.03em;
+  }
+  .tag { border: 1px solid var(--line); padding: 0.7rem 1rem; white-space: nowrap; }
+  .tag::before, .btn-ghost::before {
+    content: ""; display: inline-block; width: 0.4rem; height: 0.4rem; border-radius: 50%;
+    background: var(--accent); margin-right: 0.7rem; vertical-align: middle;
+  }
+
+  h1 {
+    font-family: "Inter Tight", "Inter", Arial, sans-serif;
+    font-weight: 700;
+    font-size: clamp(2.5rem, 8.5vw, 4.5rem);
+    line-height: 1.02;
+    letter-spacing: -0.045em;
+    margin: 4rem 0 1.25rem;
+  }
+  h1 .first { display: block; color: var(--accent); }
+  .intro { max-width: 36rem; margin: 0 0 3rem; }
+  .intro strong { font-weight: 600; }
+
+  .field-label { display: block; color: var(--muted); margin-bottom: 0.75rem; }
+  .distance { margin: 0 0 2.5rem; }
+  .distance-row { display: flex; align-items: center; gap: 1.25rem; }
+  .km-box { display: flex; align-items: baseline; gap: 0.5rem; }
+  .km-box input {
+    width: 6rem; font: inherit; font-size: 1.5rem; font-weight: 600;
+    color: var(--ink); background: var(--panel);
+    border: 1px solid var(--line); border-radius: 0; padding: 0.5rem 0.75rem;
+  }
+  .km-box span { color: var(--muted); }
+  input[type="range"] { flex: 1; min-width: 0; accent-color: var(--accent); height: 2rem; }
+  .hint { color: var(--muted); font-size: 0.9375rem; margin: 0.6rem 0 0; }
+
+  .lanes { border: 0; padding: 0; margin: 0; }
+  .lanes legend { padding: 0; }
+  .lane {
+    display: grid; grid-template-columns: 11.5rem 1fr 6rem; align-items: center; gap: 1rem;
+    padding: 0.85rem 0.5rem; border-top: 1px solid var(--line); cursor: pointer; position: relative;
+  }
+  .lane:last-of-type { border-bottom: 1px solid var(--line); }
+  .lane input { position: absolute; opacity: 0; pointer-events: none; }
+  .lane-name { display: flex; align-items: center; gap: 0.7rem; color: var(--muted); }
+  .dot { width: 0.5rem; height: 0.5rem; flex: none; border-radius: 50%; background: var(--bar); }
+  .lane-track { background: var(--track); height: 0.9rem; overflow: hidden; }
+  .lane-bar { display: block; height: 100%; min-width: 3px; background: var(--bar); transition: width 0.25s ease; }
+  .lane-value { text-align: right; color: var(--muted); letter-spacing: 0.04em; }
+  .lane:has(input:checked) .lane-name { color: var(--ink); font-weight: 600; }
+  .lane:has(input:checked) .dot,
+  .lane:has(input:checked) .lane-bar { background: var(--accent); }
+  .lane:has(input:checked) .lane-value { color: var(--ink); }
+  .lane:has(input:focus-visible),
+  .km-box input:focus-visible, input[type="range"]:focus-visible, summary:focus-visible, .btn:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 3px;
+  }
+
+  .result { margin: 3rem 0 0; }
+  .result-figure {
+    font-family: "Inter Tight", "Inter", Arial, sans-serif;
+    font-weight: 700; font-size: clamp(3.5rem, 15vw, 6.5rem);
+    line-height: 1; letter-spacing: -0.045em; margin: 0; color: var(--accent);
+  }
+  .result-figure small { font-size: 0.3em; letter-spacing: -0.01em; margin-left: 0.3em; color: var(--ink); }
+  .result-line { font-size: 1.1875rem; max-width: 36rem; margin: 1rem 0 0; }
+
+  .actions { display: flex; flex-wrap: wrap; gap: 1rem; margin: 2rem 0 0; }
+  .btn { display: inline-block; padding: 1.1rem 2rem; text-decoration: none; }
+  .btn-solid { background: var(--accent); color: var(--on-accent); }
+  .btn-ghost { border: 1px solid var(--line); color: var(--ink); }
+
+  .statbar {
+    display: flex; flex-wrap: wrap; gap: 0.6rem 2.25rem;
+    margin: 3rem 0 0; padding: 1.1rem 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  }
+  .statbar span { color: var(--muted); font-weight: 500; }
+  .statbar b { color: var(--ink); font-weight: 700; }
+
+  details { margin-top: 2rem; }
+  summary { cursor: pointer; color: var(--ink); }
+  details p, details li { color: var(--muted); max-width: 38rem; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 24rem; margin: 1rem 0; }
+  th, td { text-align: left; padding: 0.7rem 0.75rem 0.7rem 0; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); }
+  td:nth-child(2), th:nth-child(2) { text-align: right; white-space: nowrap; }
+
+  @media (max-width: 36rem) {
+    .lane { grid-template-columns: 1fr auto; row-gap: 0.5rem; }
+    .lane-track { grid-column: 1 / -1; grid-row: 2; }
+    .tag { display: none; }
+    h1 { margin-top: 2.5rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { .lane-bar { transition: none; } }
+</style>
+</head>
+<body>
+<main class="page">
+  <div class="top">
+    <div class="wordmark">cyclone</div>
+    <div class="tag mono">Carbon Share Calculator</div>
+  </div>
+
+  <h1><span class="first">Carbon Share</span> What Does a Shared Delivery Emit?</h1>
+  <p class="intro">On our Shared service, your courier carries other deliveries on the same run, so yours carries only a share of the emissions. <strong>Around 80% less carbon than a dedicated run.</strong></p>
+
+  <div class="distance">
+    <label class="field-label mono" for="km">Distance, pick-up to drop-off</label>
+    <div class="distance-row">
+      <div class="km-box">
+        <input id="km" type="number" inputmode="decimal" min="0.5" max="300" step="0.5" value="8">
+        <span>km</span>
+      </div>
+      <input id="kmSlider" type="range" min="1" max="60" step="1" value="8" aria-label="Distance in kilometres">
+    </div>
+    <p class="hint" id="kmHint">A typical trip across Dublin city is 5 to 10 km.</p>
+  </div>
+
+  <fieldset class="lanes">
+    <legend class="field-label mono">Vehicle</legend>
+    <div id="lanes"></div>
+  </fieldset>
+
+  <section class="result" aria-live="polite">
+    <p class="result-figure" id="figure"></p>
+    <p class="result-line" id="line"></p>
+  </section>
+
+  <div class="actions">
+    <a class="btn btn-solid mono" href="https://clickacourier.ie/" target="_blank" rel="noopener">Book a Courier</a>
+    <a class="btn btn-ghost mono" href="https://cyclonecouriers-website.vercel.app/fleet-sustainability" target="_blank" rel="noopener">Fleet Sustainability</a>
+  </div>
+
+  <div class="statbar mono">
+    <span>Based on / <b>5 deliveries per run</b></span>
+    <span>Compared with / <b>a dedicated run</b></span>
+    <span>ISO / <b>9001 and 14001 certified</b></span>
+  </div>
+
+  <details>
+    <summary class="mono">How we work this out</summary>
+    <p>On our Shared service, your delivery travels with others along the same run. We call the saving Carbon Share. We take the vehicle’s emissions for each kilometre and divide them between the deliveries on board. We base this on a typical run carrying 5 deliveries at a time. Each one then carries a fifth of what a dedicated run would produce, which is where the 80% figure comes from. Some runs carry more and some carry fewer.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="mono">Vehicle</th><th class="mono">CO₂ per km, whole vehicle</th></tr></thead>
+        <tbody id="factorRows"></tbody>
+      </table>
+    </div>
+    <ul>
+      <li>The figures for each vehicle match those on our Fleet Sustainability page.</li>
+      <li>We count the trip from pick-up to drop-off. The courier’s journey to the pick-up is not included.</li>
+      <li>These are estimates for comparison, not a certified measurement of any single delivery.</li>
+    </ul>
+  </details>
+</main>
+
+<script>
+  // ---------------------------------------------------------------
+  // FIGURES: grams of CO2 per kilometre, matching the Fleet
+  // Sustainability page on cyclone.ie. Bikes are left out for now.
+  // ---------------------------------------------------------------
+  var VEHICLES = [
+    { id: "motorbike", name: "Motorbike",         gPerKm: 100 },
+    { id: "topbox",    name: "Top Box Motorbike", gPerKm: 100 },
+    { id: "smallvan",  name: "Small Van",         gPerKm: 150 },
+    { id: "largevan",  name: "Large Van",         gPerKm: 250 }
+  ];
+  var DEFAULT_VEHICLE = "motorbike";
+
+  // SHARING: deliveries on board on a typical Shared run. 5 gives the 80% claim.
+  var SHARE = 5;
+
+  var kmInput = document.getElementById("km");
+  var kmSlider = document.getElementById("kmSlider");
+  var kmHint = document.getElementById("kmHint");
+  var lanesEl = document.getElementById("lanes");
+  var selected = DEFAULT_VEHICLE;
+  var maxFactor = Math.max.apply(null, VEHICLES.map(function (v) { return v.gPerKm; }));
+
+  function formatMass(grams) {
+    if (grams >= 1000) {
+      var kg = grams / 1000;
+      return { number: kg >= 100 ? Math.round(kg).toString() : kg.toFixed(kg >= 10 ? 1 : 2), unit: "kg" };
+    }
+    if (grams < 1) return { number: "under 1", unit: "g" };
+    return { number: Math.round(grams).toString(), unit: "g" };
+  }
+  function massText(grams) { var m = formatMass(grams); return m.number + " " + m.unit; }
+  function formatKm(km) { return (Math.round(km * 10) / 10).toString(); }
+
+  VEHICLES.forEach(function (v) {
+    var label = document.createElement("label");
+    label.className = "lane";
+    label.innerHTML =
+      '<input type="radio" name="vehicle" value="' + v.id + '"' + (v.id === selected ? " checked" : "") + ">" +
+      '<span class="lane-name"><span class="dot" aria-hidden="true"></span>' + v.name + "</span>" +
+      '<span class="lane-track" aria-hidden="true"><span class="lane-bar" style="width:' + (v.gPerKm / maxFactor * 100) + '%"></span></span>' +
+      '<span class="lane-value mono" data-value="' + v.id + '"></span>';
+    lanesEl.appendChild(label);
+
+    var row = document.createElement("tr");
+    row.innerHTML = "<td>" + v.name + "</td><td>About " + v.gPerKm + " g</td>";
+    document.getElementById("factorRows").appendChild(row);
+  });
+
+  function readKm() {
+    var km = parseFloat(kmInput.value);
+    if (!isFinite(km) || km <= 0) return null;
+    return Math.min(km, 300);
+  }
+
+  function render() {
+    var km = readKm();
+    var figure = document.getElementById("figure");
+    var line = document.getElementById("line");
+
+    if (km === null) {
+      kmHint.textContent = "Enter a distance above 0 km to see a result.";
+      figure.textContent = "";
+      line.textContent = "";
+      VEHICLES.forEach(function (v) {
+        document.querySelector('[data-value="' + v.id + '"]').textContent = "";
+      });
+      return;
+    }
+    kmHint.textContent = "A typical trip across Dublin city is 5 to 10 km.";
+
+    VEHICLES.forEach(function (v) {
+      document.querySelector('[data-value="' + v.id + '"]').textContent = massText(v.gPerKm * km / SHARE);
+    });
+
+    var chosen = VEHICLES.filter(function (v) { return v.id === selected; })[0];
+    var m = formatMass(chosen.gPerKm * km / SHARE);
+    figure.innerHTML = m.number + "<small>" + m.unit + " CO₂</small>";
+    line.textContent = "One " + formatKm(km) + " km Shared delivery by " + chosen.name.toLowerCase() + ".";
+  }
+
+  kmInput.addEventListener("input", function () {
+    var km = readKm();
+    if (km !== null) kmSlider.value = Math.min(Math.max(Math.round(km), 1), 60);
+    render();
+  });
+  kmSlider.addEventListener("input", function () {
+    kmInput.value = kmSlider.value;
+    render();
+  });
+  lanesEl.addEventListener("change", function (e) {
+    if (e.target && e.target.name === "vehicle") {
+      selected = e.target.value;
+      render();
+    }
+  });
+
+  render();
+</script>
+</body>
+</html>
