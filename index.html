@@ -483,5 +483,16 @@ a:focus-visible{outline:3px solid #FFCC00;outline-offset:4px}
 <script src="https://book.cyclone.ie/cyclone-track-widget.js"
         data-api="https://book.cyclone.ie/api/track"
         data-no-button></script>
+<script>
+/* cyclone.ie/#track opens the tracker, ready for a job number; cyclone.ie/#track=11103153 opens it on that job */
+(function () {
+  function go() {
+    var m = /^#track(?:=(\d+))?$/i.exec(location.hash);
+    if (m && window.cycloneTrack) window.cycloneTrack(m[1]);
+  }
+  if (document.readyState === 'complete') go(); else window.addEventListener('load', go);
+  window.addEventListener('hashchange', go);
+})();
+</script>
 </body>
 </html>
