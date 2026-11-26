@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en-IE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Christmas gift delivery | Cyclone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* Cyclone's black and yellow, with one warm Christmas note: the gold of the price */
+:root{
+  --bg:#000; --panel:#0d0d0d; --line:#2b2b2b; --line-soft:#1c1c1c;
+  --text:#fff; --muted:#9a9a9a; --dim:#6b6b6b;
+  --yellow:#FFCC00; --on-yellow:#000; --warn:#ff8a65; --ok:#9be28f; --gold-bg:#141107; --gold-line:#4a3c00; --gold-text:#e9dfb8;
+  --sans:'Inter Tight','Helvetica Neue',Helvetica,Arial,sans-serif;
+  --mono:'IBM Plex Mono','SFMono-Regular',Menlo,Consolas,monospace;
+  color-scheme:dark; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#000; --panel:#0d0d0d; --text:#fff; } }
+:root[data-theme="dark"]{ --bg:#000; --panel:#0d0d0d; --text:#fff; }
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--yellow)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:28px clamp(16px,4vw,48px) 80px}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:24px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;gap:10px;text-decoration:none;color:var(--text)}
+.brand b{font-size:22px;font-weight:700;letter-spacing:-.02em}
+.brand span{color:var(--muted);font-size:15px}
+.help{color:var(--muted);font-size:15px;text-decoration:none}
+.help strong{color:var(--text);font-weight:500}
+
+.hero{padding:44px 0 30px;display:grid;grid-template-columns:1.25fr 1fr;gap:36px;align-items:end}
+.hero h1{font-size:clamp(40px,6.2vw,82px);line-height:.95;letter-spacing:-.045em;margin:0;font-weight:700}
+.hero h1 em{font-style:normal;color:var(--yellow)}
+.hero p{color:#d6d6d6;margin:0;max-width:44ch}
+.cuts{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px 18px;font-size:15px;color:var(--gold-text)}
+.cuts b{color:var(--text);font-weight:600}
+@media (max-width:820px){.hero{grid-template-columns:1fr;gap:16px}}
+
+.steps{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:24px}
+.steps button{flex:1;background:none;border:0;border-right:1px solid var(--line);padding:13px 16px;text-align:left;cursor:pointer;color:var(--muted)}
+.steps button:last-child{border-right:0}
+.steps .n{font-family:var(--mono);font-size:13px;display:block;color:var(--dim)}
+.steps button.on{background:var(--panel);color:var(--text)}
+.steps button.on .n{color:var(--yellow)}
+.steps button.done .n::after{content:" ✓";color:var(--ok)}
+.steps button:disabled{cursor:not-allowed;opacity:.55}
+@media (max-width:640px){.steps .t{display:none}}
+
+section.step{display:none}
+section.step.on{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:clamp(18px,3vw,32px)}
+h2{font-size:clamp(26px,3.2vw,38px);letter-spacing:-.03em;line-height:1.05;margin:0 0 8px;font-weight:650}
+.sub{color:var(--muted);margin:0 0 24px;max-width:62ch}
+.q{margin:0 0 12px;font-size:19px;font-weight:600;letter-spacing:-.01em}
+.q small{display:block;font-size:14px;font-weight:400;color:var(--muted);letter-spacing:0;margin-top:2px}
+
+/* step 1: the quote */
+.quote{display:grid;grid-template-columns:1.25fr 1fr;gap:28px;align-items:start}
+@media (max-width:860px){.quote{grid-template-columns:1fr}}
+.count{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+.count button{width:52px;height:52px;border-radius:10px;border:1px solid var(--line);background:#000;font-size:26px;cursor:pointer;line-height:1}
+.count button:hover{border-color:var(--yellow)}
+.count input{width:130px;height:64px;text-align:center;font-size:40px;font-weight:700;letter-spacing:-.03em;background:#000;border:1px solid var(--line);border-radius:10px;-moz-appearance:textfield}
+.count input::-webkit-outer-spin-button,.count input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.count input:focus{border-color:var(--yellow);outline:none}
+.count span{color:var(--muted)}
+.items{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:28px}
+@media (max-width:620px){.items{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.item{background:#000;border:1px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;text-align:left;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start}
+.item.on{border-color:var(--yellow);box-shadow:inset 0 0 0 1px var(--yellow)}
+.item svg{display:block;margin-bottom:8px}
+.item b{display:block;font-size:16px}
+.item span{color:var(--muted);font-size:13.5px}
+.when{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:560px){.when{grid-template-columns:1fr}}
+label.f{display:block}
+label.f span{display:block;font-size:14px;color:var(--muted);margin-bottom:6px}
+label.f span em{font-style:normal;color:var(--dim)}
+input[type=text],input[type=date],input[type=email],input[type=tel],input[type=number]:not(#qty),select{width:100%;background:#000;border:1px solid var(--line);border-radius:8px;padding:12px 14px;outline:none}
+input:focus,select:focus{border-color:var(--yellow)}
+.datewarn{display:block;font-size:14px;margin-top:6px;color:var(--gold-text)}
+.datewarn.bad{color:var(--warn)}
+
+.pricebox{position:sticky;top:20px;background:var(--gold-bg);border:1px solid var(--gold-line);border-radius:14px;padding:24px}
+.pricebox .lbl{color:var(--gold-text);font-size:15px}
+.pricebox .per{font-size:clamp(52px,7vw,84px);font-weight:700;letter-spacing:-.05em;line-height:1;margin:6px 0 2px;color:var(--yellow)}
+.pricebox .per small{font-size:18px;font-weight:500;letter-spacing:0;color:var(--gold-text);margin-left:6px}
+.pricebox .tot{font-size:18px;margin:12px 0 0;padding-top:12px;border-top:1px solid var(--gold-line);display:flex;justify-content:space-between;gap:12px}
+.pricebox .tot b{font-size:24px}
+.pricebox .vat{color:var(--gold-text);font-size:14px;margin-top:4px}
+.pricebox .nudge{margin-top:14px;font-size:15px;color:#f2df9a}
+.pricebox .min{margin-top:14px;font-size:15px;color:var(--warn)}
+.ladder{margin-top:18px;border-top:1px solid var(--gold-line);padding-top:12px;font-size:14px;color:var(--gold-text)}
+.ladder div{display:flex;justify-content:space-between;padding:3px 0}
+.ladder div.cur{color:var(--text);font-weight:600}
+.ladder div.cur span:first-child::before{content:"● ";color:var(--yellow)}
+
+.actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;margin-top:28px}
+.btn{background:var(--yellow);color:var(--on-yellow);border:0;border-radius:8px;padding:14px 22px;font-weight:650;cursor:pointer;text-decoration:none;display:inline-block}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:none;color:var(--text);border:1px solid var(--line)}
+.btn.small{padding:9px 14px;font-size:15px}
+.note{color:var(--muted);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 22px}
+.grid .full{grid-column:1/-1}
+@media (max-width:640px){.grid{grid-template-columns:1fr}}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg button{background:#000;border:1px solid var(--line);border-radius:999px;padding:9px 16px;cursor:pointer;color:#d6d6d6}
+.seg button.on{background:var(--yellow);color:var(--on-yellow);border-color:var(--yellow);font-weight:600}
+
+/* step 3: the list */
+.tplbox{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px}
+.tplbox b{font-size:17px}
+.tplbox p{margin:2px 0 0;color:var(--muted);font-size:15px}
+.drop{display:block;border:1.5px dashed #3a3a3a;border-radius:12px;padding:30px 20px;text-align:center;cursor:pointer;transition:border-color .15s}
+.drop.over,.drop:hover{border-color:var(--yellow)}
+.drop strong{display:block;font-size:19px;margin-bottom:4px}
+.drop small{color:var(--muted)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.row-tools{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.summary{display:flex;flex-wrap:wrap;gap:10px 26px;margin:22px 0 14px;font-size:15px}
+.summary b{font-family:var(--mono);font-weight:500;margin-right:6px}
+.summary .warn,.summary .warn b{color:var(--warn)}
+.summary .gold{color:var(--gold-text);flex-basis:100%}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:1240px}
+th{text-align:left;font-weight:500;color:var(--muted);padding:10px;border-bottom:1px solid var(--line);white-space:nowrap;background:#070707}
+td{padding:4px 6px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+td input{background:transparent;border:1px solid transparent;border-radius:6px;padding:7px 6px;width:100%;min-width:90px}
+td input[data-f=name],td input[data-f=company]{min-width:150px}td input[data-f=a1]{min-width:200px}td input[data-f=a2]{min-width:140px}
+td input[data-f=town]{min-width:110px}td input[data-f=county],td input[data-f=eircode]{min-width:96px}td input[data-f=phone]{min-width:122px}
+td input:hover{border-color:var(--line)}
+td input.bad{border-color:var(--warn);background:rgba(255,138,101,.07)}
+td.area{font-family:var(--mono);font-size:13px;color:var(--muted);white-space:nowrap}
+td.area.dub{color:var(--yellow)}
+td.flag{font-size:13px;color:var(--warn);min-width:150px}
+td.flag.ok{color:var(--ok)}
+td .del{background:none;border:0;color:var(--dim);cursor:pointer;font-size:18px;padding:2px 8px}
+
+/* step 4 */
+.recap{border-top:1px solid var(--line)}
+.recap div{display:flex;justify-content:space-between;gap:16px;padding:13px 0;border-bottom:1px solid var(--line)}
+.recap div span:first-child{color:var(--muted)}
+.recap div span:last-child{text-align:right}
+.recap .total{font-size:22px;font-weight:650}
+.recap .total span:first-child{color:var(--text)}
+.ready{margin-top:24px}
+.ready p{margin:0 0 14px;color:#d6d6d6;max-width:72ch}
+.ready label{display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.ready input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--yellow);flex:none}
+.ready.ask label{outline:2px solid var(--warn);outline-offset:8px;border-radius:6px}
+.askmsg{color:var(--warn);font-size:15px;margin:14px 0 0}
+
+/* done */
+.done{text-align:left}
+.done .big{font-size:clamp(40px,6vw,72px);font-weight:700;letter-spacing:-.04em;line-height:1;margin:0 0 10px}
+.done .ref{font-family:var(--mono);color:var(--yellow);font-size:18px}
+.done ol{margin:22px 0 0;padding-left:20px;color:#d6d6d6;max-width:62ch}
+.done li{margin-bottom:8px}
+/* phones: keep the count on one line, and show the price right under it */
+.mprice{display:none;margin:-14px 0 26px;font-size:16px;color:var(--gold-text)}
+.mprice b{color:var(--yellow);font-size:20px}
+@media (max-width:860px){.mprice{display:block}}
+@media (max-width:520px){.count input{width:96px;font-size:34px}.count button{width:48px;height:48px}.count span{display:none}.brand span{display:none}.help{font-size:14px;text-align:right}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="/"><b>cyclone</b><span>Christmas gift delivery</span></a>
+    <a class="help" href="tel:014757000">Questions? <strong>01 475 7000</strong></a>
+  </header>
+
+  <div class="hero">
+    <div>
+      <h1>Your Christmas gifts, delivered to <em>every name on your list.</em></h1>
+    </div>
+    <div>
+      <p>Hampers, bottles and gift boxes for clients, partners and your team, anywhere in Ireland. One price per delivery. Tell us how many and get your price now.</p>
+      <div class="cuts"><span>Last delivery days: <b>Dublin, Monday 21 December</b></span><span><b>Rest of Ireland, Friday 18 December</b></span></div>
+    </div>
+  </div>
+
+  <nav class="steps" aria-label="Steps">
+    <button data-go="1" class="on"><span class="n">1</span><span class="t">Your price</span></button>
+    <button data-go="2" disabled><span class="n">2</span><span class="t">Your details</span></button>
+    <button data-go="3" disabled><span class="n">3</span><span class="t">Your list</span></button>
+    <button data-go="4" disabled><span class="n">4</span><span class="t">Book</span></button>
+  </nav>
+
+  <!-- 1. the price: how many, what, when -->
+  <section class="step on" id="s1">
+    <div class="card">
+      <div class="quote">
+        <div>
+          <div class="q">How many deliveries?<small>One delivery is one address. Five or more.</small></div>
+          <div class="count">
+            <button type="button" id="minus" aria-label="One fewer">−</button>
+            <input type="number" id="qty" min="1" max="999" value="20" inputmode="numeric" aria-label="Number of deliveries">
+            <button type="button" id="plus" aria-label="One more">+</button>
+            <span>deliveries</span>
+          </div>
+          <div class="mprice" id="mprice" aria-hidden="true"></div>
+
+          <div class="q">What are you sending?<small>Pick the closest.</small></div>
+          <div class="items" id="items"></div>
+
+          <div class="when">
+            <label class="f"><span>Delivery day</span><input type="date" id="date"><span class="datewarn" id="datewarn" hidden></span></label>
+            <div class="f"><span class="note" style="display:block;margin-bottom:6px">Arriving</span>
+              <div class="seg" id="window"><button data-v="Morning" class="on">Morning</button><button data-v="Afternoon">Afternoon</button><button data-v="Any time">Any time</button></div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="pricebox" aria-live="polite">
+          <div class="lbl">Your price per delivery</div>
+          <div class="per" id="per">€20<small>each</small></div>
+          <div class="tot"><span>For <span id="qtytxt">20</span> deliveries</span><b id="total">€400.00</b></div>
+          <div class="vat" id="vat">plus VAT</div>
+          <div class="nudge" id="nudge" hidden></div>
+          <div class="min" id="min" hidden></div>
+          <div class="ladder" id="ladder"></div>
+        </aside>
+      </div>
+      <div class="actions"><span class="note">Same price anywhere in Ireland. No list needed yet.</span><button class="btn" id="to2">Book these deliveries</button></div>
+    </div>
+  </section>
+
+  <!-- 2. details -->
+  <section class="step" id="s2">
+    <div class="card">
+      <h2>Your details</h2>
+      <p class="sub">Who we collect from, and where to send your confirmation.</p>
+      <div class="grid">
+        <label class="f"><span>Your name</span><input type="text" id="cname" autocomplete="name"></label>
+        <label class="f"><span>Company</span><input type="text" id="company" autocomplete="organization"></label>
+        <label class="f"><span>Email</span><input type="email" id="cemail" autocomplete="email"></label>
+        <label class="f"><span>Phone</span><input type="tel" id="cphone" autocomplete="tel"></label>
+        <label class="f full"><span>Collect the gifts from</span><input type="text" id="collect" placeholder="Street, town, Eircode"></label>
+        <label class="f full"><span>Anything we should know? <em>(optional)</em></span><input type="text" id="notes" maxlength="200" placeholder="e.g. some hampers are heavy; collection from reception"></label>
+      </div>
+      <div class="actions"><button class="btn ghost" data-back="1">Back</button><span class="note" id="s2msg"></span><button class="btn" id="to3">Add your list</button></div>
+    </div>
+  </section>
+
+  <!-- 3. the list, on our template -->
+  <section class="step" id="s3">
+    <div class="card">
+      <h2>Your list</h2>
+      <p class="sub">Fill in our template with one row per delivery, then upload it here. We’ll check every address and flag anything that needs a second look.</p>
+      <div class="tplbox">
+        <div><b>1. Download the template</b><p>An Excel sheet with the columns we need, and an example row.</p></div>
+        <button class="btn small" id="template">Download template</button>
+      </div>
+      <label class="drop" id="drop" for="file"><strong>2. Upload your completed list</strong><small>Drop it here, or click to choose the file.</small></label>
+      <input type="file" id="file" class="sr-only" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv">
+      <p class="note" id="filemsg" role="status" style="margin:12px 0 0"></p>
+      <div class="row-tools"><button class="btn ghost small" id="addrow">Or type them in</button><button class="btn ghost small" id="sample">See an example</button></div>
+      <div id="listarea" hidden>
+        <div class="summary" id="summary"></div>
+        <div class="tablewrap"><table id="tbl"><thead><tr><th>Name</th><th>Company</th><th>Address line 1</th><th>Address line 2</th><th>Town</th><th>County</th><th>Eircode</th><th>Phone</th><th>Area</th><th>Check</th><th></th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="actions"><button class="btn ghost" data-back="2">Back</button><button class="btn" id="to4" disabled>Upload your list</button></div>
+    </div>
+  </section>
+
+  <!-- 4. confirm and book -->
+  <section class="step" id="s4">
+    <div class="card" id="bookcard">
+      <h2>Check and book</h2>
+      <p class="sub">Here’s your booking. When you book, our team will confirm your collection time.</p>
+      <div class="recap" id="recap"></div>
+      <div class="ready" id="ready">
+        <p>Our price assumes every gift is packed ready to travel and clearly labelled with the recipient’s name and address. If anything needs packing or labelling when we collect it, we’ll quote for that before your delivery day.</p>
+        <label><input type="checkbox" id="readyok"><span>My gifts will be packed for transport and labelled with each recipient’s name and address.</span></label>
+        <p class="askmsg" id="askmsg" hidden>Tick the box to confirm your gifts will be packed and labelled, then book.</p>
+      </div>
+      <div class="actions"><button class="btn ghost" data-back="3">Back</button><span class="note" id="bookmsg" role="status"></span><button class="btn" id="book">Book your deliveries</button></div>
+    </div>
+    <div class="card done" id="donecard" hidden>
+      <p class="big">You’re booked. Happy Christmas.</p>
+      <p>Your reference: <span class="ref" id="ref"></span></p>
+      <ol>
+        <li>Our team will be in touch to confirm your collection time.</li>
+        <li>Have every gift packed and labelled with the recipient’s name and address.</li>
+        <li>We collect, and deliver to every name on your list.</li>
+      </ol>
+      <div class="actions"><span class="note">Questions? Call 01 475 7000 and quote your reference.</span><a class="btn ghost" href="/">Back to cyclone.ie</a></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+/* ---------- settings Cyclone can change ---------- */
+var CONFIG = {
+  minimum: 5,
+  tiers: [ {from:5, price:25.00}, {from:10, price:20.00}, {from:15, price:18.50}, {from:30, price:17.00}, {from:50, price:15.00} ],
+  vat: 0.23,
+  country: 'Ireland',
+  service: {dublin:'Same Day', ireland:'Nationwide'},
+  christmas: {dublinLast:'2026-12-21', dublinText:'Monday 21 December', irelandLast:'2026-12-18', irelandText:'Friday 18 December', reopen:'2027-01-04'},
+  items: [
+    {id:'hamper', name:'Hampers',       note:'Up to 6 kg',            kg:6},
+    {id:'bottle', name:'Bottles',       note:'Wine, champagne, spirits', kg:3},
+    {id:'box',    name:'Gift boxes',    note:'Up to 2 kg',            kg:2},
+    {id:'bag',    name:'Gift bags',     note:'Up to 1 kg',            kg:1},
+    {id:'food',   name:'Chocolates or food', note:'Treats and sweets', kg:2},
+    {id:'flowers',name:'Flowers or plants',  note:'Kept upright',     kg:2},
+    {id:'mixed',  name:'A mix',         note:'Different gifts',       kg:3},
+    {id:'other',  name:'Something else',note:'Tell us in step 2',     kg:2}
+  ]
+};
+var DUBLIN_KEYS=['D01','D02','D03','D04','D05','D06','D6W','D07','D08','D09','D10','D11','D12','D13','D14','D15','D16','D17','D18','D20','D22','D24','A94','A96','K32','K34','K36','K45','K56','K67','K78','A41','A42','A45'];
+var EIRCODE=/^([AC-FHKNPRTV-Y]\d{2}|D6W)\s?[0-9AC-FHKNPRTV-Y]{4}$/i;
+var PAGE_OPENED=Date.now();   // a real person takes minutes to fill this in; a robot takes a second
+
+var state={step:1, item:'hamper', windowV:'Morning', rows:[]};
+var $=function(id){return document.getElementById(id);};
+var euro=function(n){return '€'+n.toFixed(2);};
+var euroShort=function(n){return n%1? '€'+n.toFixed(2) : '€'+n;};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+
+/* ---------- steps ---------- */
+var stepBtns=document.querySelectorAll('.steps button');
+function go(n){
+  state.step=n;
+  document.querySelectorAll('section.step').forEach(function(s,i){ s.classList.toggle('on', i+1===n); });
+  stepBtns.forEach(function(b,i){ b.classList.toggle('on', i+1===n); if(i+1<=n) b.disabled=false; if(i+1<n) b.classList.add('done'); });
+  if(n===4) renderRecap();
+  window.scrollTo({top:document.querySelector('.steps').offsetTop-12, behavior:'smooth'});
+}
+stepBtns.forEach(function(b){ b.addEventListener('click', function(){ if(!b.disabled) go(+b.dataset.go); }); });
+document.querySelectorAll('[data-back]').forEach(function(b){ b.addEventListener('click', function(){ go(+b.dataset.back); }); });
+
+/* ---------- 1. the price ---------- */
+function tierFor(n){ var t=CONFIG.tiers[0]; CONFIG.tiers.forEach(function(x){ if(n>=x.from) t=x; }); return t; }
+function nextTier(n){ for(var i=0;i<CONFIG.tiers.length;i++){ if(n<CONFIG.tiers[i].from) return CONFIG.tiers[i]; } return null; }
+function qty(){ return Math.max(0, Math.floor(+$('qty').value||0)); }
+function renderPrice(){
+  var n=qty(), t=tierFor(Math.max(n,CONFIG.minimum)), nx=nextTier(n);
+  $('per').innerHTML=euroShort(t.price)+'<small>each</small>';
+  $('qtytxt').textContent=n;
+  $('total').textContent=euro(n*t.price);
+  $('vat').textContent='plus VAT ('+euro(n*t.price*CONFIG.vat)+'), '+euro(n*t.price*(1+CONFIG.vat))+' in total';
+  $('min').hidden = n>=CONFIG.minimum;
+  $('min').textContent='Our Christmas service starts at '+CONFIG.minimum+' deliveries.';
+  var close = nx && n>=CONFIG.minimum && (nx.from-n)<=Math.max(5,Math.ceil(n*0.3));
+  $('nudge').hidden=!close;
+  if(close) $('nudge').textContent='Add '+(nx.from-n)+' more and every delivery drops to '+euroShort(nx.price)+'.';
+  $('ladder').innerHTML=CONFIG.tiers.map(function(x,i){
+    var to=CONFIG.tiers[i+1]?CONFIG.tiers[i+1].from-1:null;
+    return '<div class="'+(x===t&&n>=CONFIG.minimum?'cur':'')+'"><span>'+x.from+(to?'–'+to:'+')+' deliveries</span><span>'+euroShort(x.price)+' each</span></div>';
+  }).join('');
+  $('to2').disabled = n<CONFIG.minimum;
+  $('mprice').innerHTML = n>=CONFIG.minimum ? '<b>'+euroShort(t.price)+' each</b> &nbsp;·&nbsp; '+euro(n*t.price)+' plus VAT' : 'Our Christmas service starts at '+CONFIG.minimum+' deliveries.';
+}
+$('qty').addEventListener('input', renderPrice);
+$('minus').addEventListener('click', function(){ $('qty').value=Math.max(1,qty()-1); renderPrice(); });
+$('plus').addEventListener('click', function(){ $('qty').value=qty()+1; renderPrice(); });
+
+var ICON={
+  hamper:'<path d="M6 16h28l-3 17H9z"/><path d="M11 16c0-6 4-9 9-9s9 3 9 9"/><path d="M14 22v6M20 22v6M26 22v6"/>',
+  bottle:'<path d="M17 5h6v6l3 5v18H14V16l3-5z"/><path d="M14 22h12"/>',
+  box:'<path d="M7 14l13-6 13 6v14l-13 6-13-6z"/><path d="M7 14l13 6 13-6M20 20v14"/>',
+  bag:'<path d="M9 14h22l-2 20H11z"/><path d="M15 14v-3a5 5 0 0 1 10 0v3"/>',
+  food:'<rect x="7" y="10" width="26" height="20" rx="3"/><path d="M7 17h26M17 10v20"/>',
+  flowers:'<path d="M20 34V18"/><circle cx="20" cy="12" r="5"/><path d="M20 26c-4-4-9-3-10 0 4 2 8 2 10 0zM20 24c4-4 9-3 10 0-4 2-8 2-10 0z"/>',
+  mixed:'<rect x="6" y="18" width="14" height="14" rx="2"/><path d="M24 12h8l-1 20h-6z"/><path d="M9 18v-3a4 4 0 0 1 8 0v3"/>',
+  other:'<circle cx="20" cy="20" r="13"/><path d="M16 16a4 4 0 1 1 5 4c-1 .5-1 1.5-1 3M20 27v.5"/>'
+};
+function renderItems(){
+  $('items').innerHTML=CONFIG.items.map(function(it){
+    return '<button type="button" class="item'+(it.id===state.item?' on':'')+'" data-i="'+it.id+'" aria-pressed="'+(it.id===state.item)+'"><svg width="36" height="36" viewBox="0 0 40 40" fill="none" stroke="#FFCC00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'+ICON[it.id]+'</svg><b>'+it.name+'</b><span>'+it.note+'</span></button>';
+  }).join('');
+}
+$('items').addEventListener('click', function(e){ var b=e.target.closest('[data-i]'); if(!b) return; state.item=b.dataset.i; renderItems(); });
+
+// the delivery day: weekdays only, and within the Christmas cut-offs
+var d=new Date(); d.setDate(d.getDate()+3); while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1);
+var iso=d.toISOString().slice(0,10); if(iso>CONFIG.christmas.dublinLast) iso=CONFIG.christmas.dublinLast;
+$('date').value=iso;
+function niceDate(v){ if(!v) return ''; return new Date(v+'T09:00:00').toLocaleDateString('en-IE',{weekday:'long',day:'numeric',month:'long'}); }
+function afterDublin(){ var v=$('date').value; return v>CONFIG.christmas.dublinLast && v<CONFIG.christmas.reopen; }
+function afterIreland(){ var v=$('date').value; return v>CONFIG.christmas.irelandLast && v<CONFIG.christmas.reopen; }
+function checkDate(){
+  var w=$('datewarn'), v=$('date').value, day=v?new Date(v+'T09:00:00').getDay():1;
+  w.className='datewarn'; w.hidden=true;
+  if(afterDublin()){ w.hidden=false; w.className='datewarn bad'; w.textContent='Our last delivery day before Christmas is '+CONFIG.christmas.dublinText+'.'; return false; }
+  if(day===0||day===6){ w.hidden=false; w.className='datewarn bad'; w.textContent='We deliver Monday to Friday. Please choose a weekday.'; return false; }
+  if(afterIreland()){ w.hidden=false; w.textContent='Dublin addresses only on this day: elsewhere in Ireland needs '+CONFIG.christmas.irelandText+' or earlier.'; }
+  return true;
+}
+$('date').addEventListener('change', function(){ checkDate(); if(state.rows.length) renderSummary(); });
+$('window').addEventListener('click', function(e){ var b=e.target.closest('button'); if(!b) return; this.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on',x===b); }); state.windowV=b.dataset.v; });
+$('to2').addEventListener('click', function(){ if(qty()<CONFIG.minimum || !checkDate()){ $('date').focus(); return; } go(2); });
+
+/* ---------- 2. details ---------- */
+$('to3').addEventListener('click', function(){
+  var m=$('s2msg');
+  if(!$('cname').value.trim()){ m.textContent='Add your name.'; $('cname').focus(); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('cemail').value.trim())){ m.textContent='Add your email, for your confirmation.'; $('cemail').focus(); return; }
+  if(!$('collect').value.trim()){ m.textContent='Add the address we collect from.'; $('collect').focus(); return; }
+  m.textContent=''; go(3);
+});
+
+/* ---------- 3. the list ---------- */
+var FIELDS=['name','company','a1','a2','town','county','eircode','phone','gift'];
+var SYN={
+  name:['name','recipient','recipient name','contact','deliver contact','full name'],
+  company:['company','company name','organisation','organization'],
+  a1:['address line 1','address 1','address','address1','street','line 1'],
+  a2:['address line 2','address 2','adreess line 2','address2','line 2'],
+  town:['town','city','town/city'],
+  county:['county','co','co.'],
+  eircode:['eircode','postcode','post code','postal code'],
+  phone:['phone','mobile','telephone','tel','deliver phone','phone number'],
+  gift:['gift','gift (optional)','what they get','your ref','reference','notes']
+};
+function norm(h){ return String(h||'').toLowerCase().replace(/\(.*?\)/g,'').replace(/[^a-z0-9#/ ]/g,' ').replace(/\s+/g,' ').trim(); }
+function mapHeaders(headers){
+  var m={};
+  headers.forEach(function(h,i){ var n=norm(h); FIELDS.forEach(function(f){ if(m[f]==null && SYN[f].indexOf(n)>-1) m[f]=i; }); });
+  headers.forEach(function(h,i){
+    var n=norm(h); if(Object.values(m).indexOf(i)>-1) return;
+    if(m.a2==null && /2/.test(n) && /address|line/.test(n)) m.a2=i;
+    else if(m.a1==null && /address|street/.test(n)) m.a1=i;
+    else if(m.eircode==null && /eir|post/.test(n)) m.eircode=i;
+    else if(m.phone==null && /phone|mobile|tel/.test(n)) m.phone=i;
+    else if(m.name==null && /name|contact/.test(n) && !/company/.test(n)) m.name=i;
+  });
+  return m;
+}
+function areaOf(ec){ var k=String(ec||'').toUpperCase().replace(/\s/g,'').slice(0,3); if(!k) return ''; return DUBLIN_KEYS.indexOf(k)>-1?'dublin':'ireland'; }
+function check(r){
+  var x=[];
+  if(!r.name) x.push({f:'name',t:'Add a name'});
+  if(!r.a1) x.push({f:'a1',t:'Add the first line of the address'});
+  if(r.a1 && r.a1.length>32) x.push({f:'a1',t:'Shorten line 1 to 32 characters'});
+  if(r.a2 && r.a2.length>32) x.push({f:'a2',t:'Shorten line 2 to 32 characters'});
+  if(!r.town) x.push({f:'town',t:'Add a town'});
+  if(!r.eircode) x.push({f:'eircode',t:'Add an Eircode'});
+  else if(!EIRCODE.test(r.eircode.trim())) x.push({f:'eircode',t:'Check the Eircode'});
+  var dg=String(r.phone||'').replace(/\D/g,'');
+  if(!dg) x.push({f:'phone',t:'Add a phone number'}); else if(dg.length<7) x.push({f:'phone',t:'Check the phone number'});
+  if(r.eircode && EIRCODE.test(r.eircode.trim()) && areaOf(r.eircode)==='ireland' && !r.county) x.push({f:'county',t:'Add the county'});
+  return x;
+}
+function tidy(r){
+  if(r.eircode){ var e=r.eircode.toUpperCase().replace(/\s/g,''); if(e.length===7) r.eircode=e.slice(0,3)+' '+e.slice(3); }
+  if(!r.county && areaOf(r.eircode)==='dublin') r.county='Dublin';
+  return r;
+}
+function loadRows(aoa){
+  var hi=-1;
+  for(var i=0;i<Math.min(aoa.length,15);i++){ if(aoa[i].filter(function(c){return String(c).trim();}).length>=3){ hi=i; break; } }
+  if(hi<0) return 0;
+  var m=mapHeaders(aoa[hi]||[]), rows=[];
+  for(var j=hi+1;j<aoa.length;j++){
+    var line=aoa[j]; if(!line || !line.some(function(c){return String(c).trim();})) continue;
+    var r={}; FIELDS.forEach(function(f){ r[f]=m[f]!=null?String(line[m[f]]==null?'':line[m[f]]).trim():''; });
+    if(r.name==='Aoife Byrne' && r.eircode.replace(/\s/g,'')==='D02XY45') continue;   // skip the template's example row
+    if(!FIELDS.some(function(f){return r[f];})) continue;
+    rows.push(tidy(r));
+  }
+  if(!rows.length) return 0;
+  state.rows=rows; renderList(); return rows.length;
+}
+function readFile(f){
+  var msg=$('filemsg'); msg.style.color=''; msg.textContent='Reading '+f.name+'…';
+  if(typeof XLSX==='undefined'){ msg.style.color='var(--warn)'; msg.textContent='The spreadsheet reader didn’t load. Refresh the page and try again, or type them in.'; return; }
+  var rd=new FileReader();
+  rd.onerror=function(){ msg.style.color='var(--warn)'; msg.textContent='That file couldn’t be opened. Save it as Excel (.xlsx) or CSV and try again.'; };
+  rd.onload=function(e){
+    try{
+      var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'}), n=0;
+      for(var s=0;s<wb.SheetNames.length && !n;s++) n=loadRows(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[s]],{header:1,defval:'',raw:false,blankrows:false}));
+      if(n) msg.textContent=n+' '+(n===1?'delivery':'deliveries')+' read from '+f.name+'.';
+      else { msg.style.color='var(--warn)'; msg.textContent='No names found in '+f.name+'. Fill in the template with one row per delivery and try again.'; }
+    }catch(err){ msg.style.color='var(--warn)'; msg.textContent='That file couldn’t be read. Save it as Excel (.xlsx) or CSV and try again.'; }
+  };
+  rd.readAsArrayBuffer(f);
+}
+var drop=$('drop');
+$('file').addEventListener('change', function(){ if(this.files[0]) readFile(this.files[0]); this.value=''; });
+['dragover','dragenter'].forEach(function(t){ drop.addEventListener(t,function(e){ e.preventDefault(); drop.classList.add('over'); }); });
+['dragleave','drop'].forEach(function(t){ drop.addEventListener(t,function(e){ e.preventDefault(); drop.classList.remove('over'); }); });
+drop.addEventListener('drop', function(e){ if(e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]); });
+
+$('template').addEventListener('click', function(){
+  if(typeof XLSX==='undefined'){ alert('The template couldn’t be prepared. Refresh the page and try again.'); return; }
+  var ws=XLSX.utils.aoa_to_sheet([
+    ['Name','Company','Address line 1','Address line 2','Town','County','Eircode','Phone','Gift (optional)'],
+    ['Aoife Byrne','Example Ltd','Unit 4, The Courtyard','Harcourt Road','Dublin 2','Dublin','D02 XY45','0871234567','Large hamper']
+  ]);
+  ws['!cols']=[{wch:20},{wch:22},{wch:28},{wch:22},{wch:14},{wch:12},{wch:11},{wch:14},{wch:18}];
+  var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Your list');
+  XLSX.writeFile(wb,'cyclone-christmas-list-template.xlsx');
+});
+$('sample').addEventListener('click', function(){
+  var fn=['Aoife','Ciara','Niamh','Sinéad','Orla','Róisín','Clodagh','Saoirse','Emma','Grace','Seán','Conor','Darragh','Eoin','Cian','Fionn','Ruth','Maeve','Áine','Laura'];
+  var ln=['Byrne','Kelly','Murphy','Walsh','Doyle','Ryan','Nolan','Kavanagh','Brennan','Quinn','Burke','Lynch','Carroll','Hayes','Moran','Kenny','Power','Keane','Dunne','Foley'];
+  var ad=[['Harcourt Road','Dublin 2','','D02 XY46'],['Baggot Street Lower','Dublin 2','','D02 TN83'],['South William Street','Dublin 2','','D02 HX73'],['Ranelagh Road','Dublin 6','','D06 F2C9'],['Merrion Road','Dublin 4','','D04 K7W2'],['Clontarf Road','Dublin 3','','D03 P2R6'],['Phibsborough Road','Dublin 7','','D07 E4T2'],['Rathgar Road','Dublin 6','','D06 V8X2'],['Main Street','Malahide','','K36 T9C1'],['Main Street','Dún Laoghaire','','A96 N2H5'],['Thomas Street','Dublin 8','','D08 KT8A'],['Leeson Street','Dublin 2','','D02 VE89'],['Grand Canal Dock','Dublin 2','','D02 AP94'],['Sandymount Green','Dublin 4','','D04 W5N3'],['Main Street','Swords','','K67 A9P2'],['Templeogue Road','Dublin 6W','','D6W Y9X3'],['Patrick Street','Cork','Cork','T12 X8Y5'],['Shop Street','Galway','Galway','H91 K2N4'],['O’Connell Street','Limerick','Limerick','V94 P6R2'],['The Quay','Waterford','Waterford','X91 F3E8']];
+  var co=['Arden Partners','Liffey Law','Harbour Design','North Quay Capital','Brightwork','Merrion Health',''];
+  var rows=[]; for(var i=0;i<qty() && i<ad.length;i++){ var a=ad[i]; rows.push(tidy({name:fn[i]+' '+ln[i],company:co[i%co.length],a1:(10+i*3)+' '+a[0],a2:'',town:a[1],county:a[2],eircode:a[3],phone:'08'+(5+i%3)+' '+(1000000+i*37413).toString().slice(0,7),gift:''})); }
+  state.rows=rows; $('filemsg').style.color=''; $('filemsg').textContent='An example list, so you can see how it works.'; renderList();
+});
+$('addrow').addEventListener('click', function(){
+  state.rows.push({name:'',company:'',a1:'',a2:'',town:'',county:'',eircode:'',phone:'',gift:''});
+  renderList(); var ins=document.querySelectorAll('#tbl tbody tr:last-child input'); if(ins[0]) ins[0].focus();
+});
+var COLS=['name','company','a1','a2','town','county','eircode','phone'];
+function renderList(){
+  $('listarea').hidden=!state.rows.length;
+  var tb=document.querySelector('#tbl tbody'); tb.innerHTML='';
+  state.rows.forEach(function(r,i){
+    var tr=document.createElement('tr'), issues=check(r), bad={}; issues.forEach(function(x){ bad[x.f]=1; });
+    var h=''; COLS.forEach(function(c){ h+='<td><input data-i="'+i+'" data-f="'+c+'" value="'+esc(r[c])+'"'+(bad[c]?' class="bad"':'')+' aria-label="'+c+'"></td>'; });
+    var ar=areaOf(r.eircode);
+    h+='<td class="area'+(ar==='dublin'?' dub':'')+'">'+(ar==='dublin'?'Dublin':ar==='ireland'?'Rest of Ireland':'')+'</td>';
+    h+='<td class="flag'+(issues.length?'':' ok')+'">'+(issues.length?esc(issues[0].t)+(issues.length>1?' (+'+(issues.length-1)+')':''):'Ready')+'</td>';
+    h+='<td><button class="del" data-del="'+i+'" aria-label="Remove">×</button></td>';
+    tr.innerHTML=h; tb.appendChild(tr);
+  });
+  renderSummary();
+}
+function counts(){ var c={total:state.rows.length,fix:0,dublin:0,ireland:0}; state.rows.forEach(function(r){ if(check(r).length) c.fix++; if(areaOf(r.eircode)==='dublin') c.dublin++; else c.ireland++; }); return c; }
+function renderSummary(){
+  var c=counts(), short=Math.max(0,CONFIG.minimum-c.total), late=c.ireland>0 && afterIreland(), q=qty(), h='';
+  h+='<span><b>'+c.total+'</b>deliveries</span><span><b>'+c.dublin+'</b>in Dublin</span><span><b>'+c.ireland+'</b>rest of Ireland</span>';
+  h+= c.fix ? '<span class="warn"><b>'+c.fix+'</b>to check, highlighted below</span>' : '<span><b>✓</b>every address checked</span>';
+  if(short) h+='<span class="warn"><b>'+short+'</b>more needed: our Christmas service starts at '+CONFIG.minimum+'</span>';
+  if(late) h+='<span class="warn" style="flex-basis:100%">Deliveries outside Dublin need to go by '+CONFIG.christmas.irelandText+'. Go back to step 1 to move your delivery day, or send the '+c.ireland+' outside Dublin separately.</span>';
+  if(c.total && c.total!==q){
+    var t=tierFor(Math.max(c.total,CONFIG.minimum));
+    h+='<span class="gold">Your list has '+c.total+' and your price was for '+q+'. We’ll price it for '+c.total+': '+euroShort(t.price)+' each.</span>';
+  }
+  $('summary').innerHTML=h;
+  $('to4').disabled=!c.total || c.fix>0 || short>0 || late;
+  $('to4').textContent= !c.total ? 'Upload your list' : short ? 'Add at least '+CONFIG.minimum : c.fix ? 'Fix '+c.fix+' to continue' : late ? 'Change your delivery day' : 'Check and book';
+}
+var tbody=document.querySelector('#tbl tbody');
+tbody.addEventListener('input', function(e){ var t=e.target; if(t.dataset.f) state.rows[+t.dataset.i][t.dataset.f]=t.value; });
+tbody.addEventListener('change', function(e){ var t=e.target; if(!t.dataset.f) return; tidy(state.rows[+t.dataset.i]); renderList(); });
+tbody.addEventListener('click', function(e){ var b=e.target.closest('[data-del]'); if(!b) return; state.rows.splice(+b.dataset.del,1); renderList(); });
+$('to4').addEventListener('click', function(){ go(4); });
+
+/* ---------- 4. check and book ---------- */
+function finalQuote(){
+  var n=state.rows.length, t=tierFor(Math.max(n,CONFIG.minimum)), net=n*t.price;
+  return {n:n, per:t.price, net:net, vat:net*CONFIG.vat, gross:net*(1+CONFIG.vat)};
+}
+function itemObj(){ return CONFIG.items.filter(function(x){return x.id===state.item;})[0]; }
+function renderRecap(){
+  var q=finalQuote(), it=itemObj(), c=counts();
+  $('recap').innerHTML=
+    '<div><span>Sending</span><span>'+esc(it.name)+'</span></div>'+
+    '<div><span>Delivery day</span><span>'+esc(niceDate($('date').value))+', '+state.windowV.toLowerCase()+'</span></div>'+
+    '<div><span>Collect from</span><span>'+esc($('collect').value.trim())+'</span></div>'+
+    '<div><span>Deliveries</span><span>'+q.n+' ('+c.dublin+' in Dublin, '+c.ireland+' elsewhere)</span></div>'+
+    '<div><span>Price</span><span>'+q.n+' × '+euro(q.per)+' = '+euro(q.net)+'</span></div>'+
+    '<div><span>VAT at 23%</span><span>'+euro(q.vat)+'</span></div>'+
+    '<div class="total"><span>Total</span><span>'+euro(q.gross)+'</span></div>';
+}
+function importerRows(){
+  var it=itemObj(), out=[['Company Name (Optional)','Address Line 1','Adreess Line 2','Town','County','PostCode','Country','Your Ref (Optional)','Deliver Contact','Deliver Phone','# of Packages','Total Weight','Service']];
+  var ref=(($('company').value.trim()||'Christmas')+' gifts');
+  state.rows.forEach(function(r){
+    out.push([r.company.slice(0,32), r.a1.slice(0,32), r.a2.slice(0,32), r.town.slice(0,32), r.county, r.eircode.slice(0,16), CONFIG.country,
+      (r.gift||ref).slice(0,32), r.name, String(r.phone).replace(/\D/g,''), 1, it.kg, CONFIG.service[areaOf(r.eircode)]||CONFIG.service.ireland]);
+  });
+  return out;
+}
+$('readyok').addEventListener('change', function(){ if(this.checked){ $('ready').classList.remove('ask'); $('askmsg').hidden=true; } });
+$('book').addEventListener('click', function(){
+  if(!$('readyok').checked){ $('ready').classList.add('ask'); $('askmsg').hidden=false; $('ready').scrollIntoView({behavior:'smooth',block:'center'}); $('readyok').focus(); return; }
+  var q=finalQuote(), it=itemObj(), c=counts();
+  var ws=XLSX.utils.aoa_to_sheet(importerRows()), wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Addresses');
+  var company=$('company').value.trim();
+  var payload={
+    product:'christmas', campaign:(company?company+' ':'')+'Christmas gifts', client:company,
+    dateText:niceDate($('date').value), date:$('date').value, window:state.windowV.toLowerCase(),
+    collect:$('collect').value.trim(), contactName:$('cname').value.trim(), email:$('cemail').value.trim(),
+    pack:it.name, perPerson:1, quoted:qty(),
+    contents:[it.name, $('notes').value.trim(), $('cphone').value.trim()?'Contact phone: '+$('cphone').value.trim():''].filter(Boolean).join('. '),
+    packingAgreed:true, elapsed:Date.now()-PAGE_OPENED,
+    quote:{dublin:c.dublin, ireland:c.ireland, perDelivery:q.per, net:q.net, vat:q.vat, gross:q.gross},
+    rows:state.rows.map(function(r){ return {name:r.name, company:r.company, a1:r.a1, a2:r.a2, town:r.town, county:r.county, eircode:r.eircode, phone:r.phone, area:areaOf(r.eircode)==='dublin'?'Dublin':'Rest of Ireland'}; }),
+    importerFile:XLSX.write(wb,{bookType:'xlsx',type:'base64'})
+  };
+  var btn=$('book'), msg=$('bookmsg');
+  btn.disabled=true; btn.textContent='Sending…'; msg.style.color=''; msg.textContent='';
+  fetch('/api/launch-booking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(r){ return r.json().catch(function(){ return {ok:false}; }); })
+    .then(function(res){
+      if(!res.ok || !res.ref) throw new Error(res.error||'Your booking couldn’t be sent.');
+      $('ref').textContent=res.ref; $('bookcard').hidden=true; $('donecard').hidden=false;
+      document.querySelector('.steps').hidden=true; window.scrollTo({top:0,behavior:'smooth'});
+    })
+    .catch(function(err){
+      btn.disabled=false; btn.textContent='Book your deliveries';
+      msg.style.color='var(--warn)'; msg.textContent=(err.message||'Your booking couldn’t be sent.')+(/01 475 7000/.test(err.message||'')?'':' Please try again, or call us on 01 475 7000.');
+    });
+});
+
+renderItems(); renderPrice(); checkDate();
+})();
+</script>
+</body>
+</html>
