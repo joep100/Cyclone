@@ -335,14 +335,14 @@ ol.names li.done .st{color:var(--text)}
 (function(){
 /* ---------- settings Cyclone can change ---------- */
 var CONFIG = {
-  // Price per Dublin delivery, by list size (agreed): minimum 5 names. 5-9 EUR 25, 10-14 EUR 20, 15-29 EUR 18.50, 30-49 EUR 17, 50+ EUR 15.
-  // Deliveries outside Dublin are quoted separately (ireland: null).
+  // Price per delivery, by list size (agreed): minimum 5 names. 5-9 EUR 25, 10-14 EUR 20, 15-29 EUR 18.50, 30-49 EUR 17, 50+ EUR 15.
+  // Deliveries outside Dublin are priced the same as Dublin ones.
   minimum: 5,
-  tiers: [ {from:5,  dublin:25.00, ireland:null},
-           {from:10, dublin:20.00, ireland:null},
-           {from:15, dublin:18.50, ireland:null},
-           {from:30, dublin:17.00, ireland:null},
-           {from:50, dublin:15.00, ireland:null} ],
+  tiers: [ {from:5,  dublin:25.00, ireland:25.00},
+           {from:10, dublin:20.00, ireland:20.00},
+           {from:15, dublin:18.50, ireland:18.50},
+           {from:30, dublin:17.00, ireland:17.00},
+           {from:50, dublin:15.00, ireland:15.00} ],
   under10: {dublin:20.00, ireland:null},
   vat: 0.23,
   country: 'Ireland',                       // as it appears in the importer's country list
@@ -633,17 +633,16 @@ function quote(){
 }
 function renderPrice(){
   var q=quote(), c=q.c, h='';
-  if(c.dublin) h+='<div><span>'+c.dublin+' Dublin deliveries, same day, at '+euro(q.t.dublin)+'</span><span>'+euro(q.dub)+'</span></div>';
-  if(c.ireland) h+= q.t.ireland==null
-    ? '<div><span>'+c.ireland+' '+(c.ireland===1?'delivery':'deliveries')+' outside Dublin</span><span>We’ll confirm</span></div>'
-    : '<div><span>'+c.ireland+' rest of Ireland deliveries at '+euro(q.t.ireland)+'</span><span>'+euro(q.ire)+'</span></div>';
+  // one price for every delivery on the list, wherever it's going
+  var where=[c.dublin?c.dublin+' in Dublin':'', c.ireland?c.ireland+' elsewhere in Ireland':''].filter(Boolean).join(', ');
+  h+='<div><span>'+c.total+' '+(c.total===1?'delivery':'deliveries')+' at '+euro(q.t.dublin)+(c.dublin&&c.ireland?' <span style="color:var(--muted)">('+where+')</span>':'')+'</span><span>'+euro(q.dub+q.ire)+'</span></div>';
   h+='<div><span>VAT at 23%</span><span>'+euro(q.vat)+'</span></div>';
-  h+='<div class="total"><span>'+(c.ireland&&q.t.ireland==null?'Total for Dublin':'Total')+'</span><span>'+euro(q.gross)+'</span></div>';
+  h+='<div class="total"><span>Total</span><span>'+euro(q.gross)+'</span></div>';
   $('lines').innerHTML=h;
   var nx=nextTier(c.total);
   if(nx && (nx.from-c.total)<=Math.max(5,Math.ceil(c.total*0.3))){   // only nudge when the next price is within reach
     $('nudge').hidden=false;
-    $('nudge').textContent='Add '+(nx.from-c.total)+' more '+(nx.from-c.total===1?'name':'names')+' and every Dublin delivery drops to '+euro(nx.dublin)+'.';
+    $('nudge').textContent='Add '+(nx.from-c.total)+' more '+(nx.from-c.total===1?'name':'names')+' and every delivery drops to '+euro(nx.dublin)+'.';
   } else $('nudge').hidden=true;
   var rows=[{label:'Under 10', d:CONFIG.under10.dublin, r:CONFIG.under10.ireland, from:0}].concat(CONFIG.tiers.map(function(x,i){
     var to=CONFIG.tiers[i+1]?(CONFIG.tiers[i+1].from-1):null;
@@ -651,9 +650,9 @@ function renderPrice(){
   }));
   var cur=tierFor(c.total).from;
   rows=rows.filter(function(r){ return r.from>0; });   // Launch Day starts at the minimum list size
-  $('tiers').innerHTML='<table><thead><tr><th>Names on your list</th><th>Per Dublin delivery</th></tr></thead><tbody>'+
+  $('tiers').innerHTML='<table><thead><tr><th>Names on your list</th><th>Per delivery</th></tr></thead><tbody>'+
     rows.map(function(r){ return '<tr'+(r.from===cur?' class="cur"':'')+'><td>'+r.label+'</td><td>'+euro(r.d)+'</td></tr>'; }).join('')+
-    '</tbody></table><span class="sample">Prices per delivery, excluding VAT. Deliveries outside Dublin are quoted separately.</span>';
+    '</tbody></table><span class="sample">Prices per delivery, excluding VAT, anywhere in Ireland.</span>';
 }
 
 /* the list in the exact layout of Cyclone's importer, which books the deliveries through the API */
