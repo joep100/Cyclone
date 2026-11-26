@@ -236,8 +236,9 @@ ol.names li.done .st{color:var(--text)}
           </div>
         </div>
         <label class="f full"><span>Collect from</span><input type="text" id="collect" placeholder="Company, street, town, Eircode"></label>
-        <label class="f"><span>Your name</span><input type="text" id="cname"></label>
-        <label class="f"><span>Your email</span><input type="email" id="cemail"></label>
+        <label class="f"><span>Your name</span><input type="text" id="cname" autocomplete="name"></label>
+        <label class="f"><span>Your email <em>(for your confirmation)</em></span><input type="email" id="cemail" autocomplete="email"></label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
       </div>
       <div class="actions"><span class="note" id="s1msg"></span><button class="btn" id="to2">Add your list</button></div>
     </div>
@@ -319,8 +320,8 @@ ol.names li.done .st{color:var(--text)}
       </div>
       <div class="actions">
         <button class="btn ghost" data-back="3">Back</button>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn ghost small" id="importer" title="For Cyclone: the list in the importer's format">Importer file</button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <span class="note" id="bookmsg" role="status"></span>
           <button class="btn" id="book">Book your launch</button>
         </div>
       </div>
@@ -404,6 +405,8 @@ $('window').addEventListener('click', function(e){
 $('to2').addEventListener('click', function(){
   if(!$('campaign').value.trim()){ $('s1msg').textContent = 'Add a campaign name to continue.'; $('campaign').focus(); return; }
   if(!$('collect').value.trim()){ $('s1msg').textContent = 'Add the address we collect from.'; $('collect').focus(); return; }
+  if(!$('cname').value.trim()){ $('s1msg').textContent = 'Add your name.'; $('cname').focus(); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('cemail').value.trim())){ $('s1msg').textContent = 'Add your email address, so we can confirm your booking.'; $('cemail').focus(); return; }
   if(!checkDate()){ $('s1msg').textContent = 'Choose a launch day on or before '+CONFIG.christmas.lastDayText+', or in the new year.'; $('date').focus(); return; }
   $('s1msg').textContent=''; go(2);
 });
@@ -645,7 +648,15 @@ renderChips();
 $('photobtn').addEventListener('click', function(){ $('photo').click(); });
 $('photo').addEventListener('change', function(){
   var f=this.files[0]; if(!f) return;
-  var r=new FileReader(); r.onload=function(e){ state.photo=e.target.result; $('thumb').innerHTML='<img alt="Your pack" src="'+e.target.result+'">'; $('photobtn').textContent='Change photo'; }; r.readAsDataURL(f);
+  var r=new FileReader(); r.onload=function(e){
+    // shrink the photo so it travels easily with the booking email
+    var img=new Image(); img.onload=function(){
+      var s=Math.min(1,1400/Math.max(img.width,img.height)), c=document.createElement('canvas');
+      c.width=Math.round(img.width*s); c.height=Math.round(img.height*s); c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      state.photo=c.toDataURL('image/jpeg',0.82);
+      $('thumb').innerHTML='<img alt="Your pack" src="'+state.photo+'">'; $('photobtn').textContent='Change photo';
+    }; img.src=e.target.result;
+  }; r.readAsDataURL(f);
 });
 function contentsText(){
   // for Cyclone's team only: goes with the booking, never on the client's launch page or report
@@ -703,21 +714,46 @@ function importerRows(){
   });
   return out;
 }
-$('importer').addEventListener('click', function(){
+function importerWorkbook(){
   var ws=XLSX.utils.aoa_to_sheet(importerRows()), wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Addresses');
-  XLSX.writeFile(wb, 'launch-day-import-'+($('campaign').value.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-')||'list')+'.xlsx');
-});
+  XLSX.utils.book_append_sheet(wb, ws, 'Addresses'); return wb;
+}
 $('book').disabled=true;
 $('readyok').addEventListener('change', function(){ $('book').disabled=!this.checked; });
-$('book').addEventListener('click', function(){ if(!$('readyok').checked) return; state.booked=true; state.status=state.rows.map(function(){return {s:'booked',t:''};}); go(5); });
+/* send the booking to Cyclone: the website emails ops@cyclone.ie with the importer file attached, and confirms to the client */
+$('book').addEventListener('click', function(){
+  if(!$('readyok').checked) return;
+  var q=quote(), pk=CONFIG.packs.filter(function(p){return p.id===state.pack;})[0];
+  var payload={
+    campaign:$('campaign').value.trim(), client:$('client').value.trim(), dateText:niceDate($('date').value), date:$('date').value,
+    window:state.windowV.toLowerCase(), collect:$('collect').value.trim(), contactName:$('cname').value.trim(), email:$('cemail').value.trim(),
+    pack:pk.name, perPerson:q.per, contents:contentsText(), packingAgreed:true, website:$('website').value,
+    quote:{dublin:q.c.dublin, ireland:q.c.ireland, perDelivery:q.t.dublin, net:q.net, vat:q.vat, gross:q.gross},
+    rows:state.rows.map(function(r){ return {name:r.name, company:r.company, a1:r.a1, a2:r.a2, town:r.town, county:r.county, eircode:r.eircode, phone:r.phone, area:areaOf(r.eircode)==='dublin'?'Dublin':'Rest of Ireland'}; }),
+    importerFile:XLSX.write(importerWorkbook(), {bookType:'xlsx', type:'base64'}),
+    photo:state.photo||''
+  };
+  var btn=$('book'), msg=$('bookmsg');
+  btn.disabled=true; btn.textContent='Sending…'; msg.style.color=''; msg.textContent='';
+  fetch('/api/launch-booking', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)})
+    .then(function(r){ return r.json().catch(function(){ return {ok:false}; }); })
+    .then(function(res){
+      if(!res.ok) throw new Error(res.error||'');
+      state.booked=true; state.ref=res.ref; state.confirmed=res.confirmed;
+      state.status=state.rows.map(function(){return {s:'booked',t:''};}); go(5);
+    })
+    .catch(function(err){
+      btn.disabled=false; btn.textContent='Book your launch';
+      msg.style.color='var(--warn)'; msg.textContent=(err.message||'Your booking couldn’t be sent.')+(/01 475 7000/.test(err.message||'')?'':' Please try again, or call us on 01 475 7000.');
+    });
+});
 
 /* ---------- 5. launch day ---------- */
 function niceDate(v){ if(!v) return ''; var d=new Date(v+'T09:00:00'); return d.toLocaleDateString('en-IE',{weekday:'long',day:'numeric',month:'long'}); }
 function renderLaunch(){
   $('lname').textContent=$('campaign').value.trim()||'Your launch';
   var cl=$('client').value.trim();
-  $('lmeta').textContent=(cl?'For '+cl+'. ':'')+niceDate($('date').value)+', '+state.windowV.toLowerCase()+'.';
+  $('lmeta').textContent=(cl?'For '+cl+'. ':'')+niceDate($('date').value)+', '+state.windowV.toLowerCase()+'.'+(state.ref?' Booked, reference '+state.ref+(state.confirmed?'. A confirmation is on its way to '+$('cemail').value.trim()+'.':'. Our team will be in touch to confirm.'):'');
   var slug=($('campaign').value.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-')||'launch');
   $('sharelink').textContent='cyclone.ie/launch/'+slug;
   drawNames();
