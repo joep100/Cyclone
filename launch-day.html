@@ -83,7 +83,11 @@ input:focus,select:focus{border-color:var(--yellow)}
 .note{color:var(--muted);font-size:15px}
 
 /* list upload */
-.drop{border:1.5px dashed #3a3a3a;border-radius:12px;padding:34px 20px;text-align:center;cursor:pointer;transition:border-color .15s}
+.drop{display:block;border:1.5px dashed #3a3a3a;border-radius:12px;padding:34px 20px;text-align:center;cursor:pointer;transition:border-color .15s}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.sr-only:focus-visible + .row-tools, #file:focus-visible{outline:none}
+#file:focus-visible ~ * {outline:none}
+label.drop:has(+ #file:focus-visible){border-color:var(--yellow)}
 .drop.over,.drop:hover{border-color:var(--yellow)}
 .drop strong{display:block;font-size:20px;letter-spacing:-.01em;margin-bottom:4px}
 .drop small{color:var(--muted)}
@@ -228,11 +232,11 @@ ol.names li.done .st{color:var(--text)}
     <div class="card">
       <h2>Your list</h2>
       <p class="sub">Upload the spreadsheet you already have, in any layout. We’ll match the columns, check every address, and show anything that needs a second look. Launch Day is for lists of 5 or more.</p>
-      <div class="drop" id="drop" tabindex="0" role="button" aria-label="Upload your list">
+      <label class="drop" id="drop" for="file">
         <strong>Drop your list here, or choose a file</strong>
         <small>Excel or CSV. One row per person.</small>
-        <input type="file" id="file" accept=".xlsx,.xls,.csv" hidden>
-      </div>
+      </label>
+      <input type="file" id="file" class="sr-only" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv">
       <div class="row-tools">
         <button class="btn ghost small" id="template">Download our template</button>
         <button class="btn ghost small" id="sample">Try it with a sample list</button>
@@ -467,12 +471,14 @@ function readFile(f){
   reader.readAsArrayBuffer(f);
 }
 var drop = $('drop');
-drop.addEventListener('click', function(){ $('file').click(); });
-drop.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $('file').click(); } });
+// the drop zone is a label for the file box, so a click or tap opens the file picker natively in every browser
 $('file').addEventListener('change', function(){ if(this.files[0]) readFile(this.files[0]); this.value=''; });
 ['dragover','dragenter'].forEach(function(t){ drop.addEventListener(t,function(e){ e.preventDefault(); drop.classList.add('over'); }); });
 ['dragleave','drop'].forEach(function(t){ drop.addEventListener(t,function(e){ e.preventDefault(); drop.classList.remove('over'); }); });
 drop.addEventListener('drop', function(e){ if(e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]); });
+if(typeof XLSX==='undefined'){   // the spreadsheet reader didn't load: say so rather than fail silently
+  drop.querySelector('small').textContent='Spreadsheet upload isn’t available right now. Use “Add a name” or call us on 01 475 7000.';
+}
 
 $('template').addEventListener('click', function(){
   var ws = XLSX.utils.aoa_to_sheet([
