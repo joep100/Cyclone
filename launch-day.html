@@ -227,7 +227,7 @@ ol.names li.done .st{color:var(--text)}
   <section class="step" id="s2">
     <div class="card">
       <h2>Your list</h2>
-      <p class="sub">Upload the spreadsheet you already have, in any layout. We’ll match the columns, check every address, and show anything that needs a second look.</p>
+      <p class="sub">Upload the spreadsheet you already have, in any layout. We’ll match the columns, check every address, and show anything that needs a second look. Launch Day is for lists of 5 or more.</p>
       <div class="drop" id="drop" tabindex="0" role="button" aria-label="Upload your list">
         <strong>Drop your list here, or choose a file</strong>
         <small>Excel or CSV. One row per person.</small>
@@ -330,9 +330,11 @@ ol.names li.done .st{color:var(--text)}
 (function(){
 /* ---------- settings Cyclone can change ---------- */
 var CONFIG = {
-  // Price per Dublin delivery, by list size (agreed): 5-14 EUR 20, 15-29 EUR 18.50, 30-49 EUR 17, 50+ EUR 15.
+  // Price per Dublin delivery, by list size (agreed): minimum 5 names. 5-9 EUR 25, 10-14 EUR 20, 15-29 EUR 18.50, 30-49 EUR 17, 50+ EUR 15.
   // Deliveries outside Dublin are quoted separately (ireland: null).
-  tiers: [ {from:5,  dublin:20.00, ireland:null},
+  minimum: 5,
+  tiers: [ {from:5,  dublin:25.00, ireland:null},
+           {from:10, dublin:20.00, ireland:null},
            {from:15, dublin:18.50, ireland:null},
            {from:30, dublin:17.00, ireland:null},
            {from:50, dublin:15.00, ireland:null} ],
@@ -523,11 +525,12 @@ function counts(){
   return c;
 }
 function renderSummary(){
-  var c=counts();
+  var c=counts(), short=Math.max(0, CONFIG.minimum - c.total);
   $('summary').innerHTML='<span><b>'+c.total+'</b>names</span><span><b>'+c.dublin+'</b>in Dublin</span><span><b>'+c.ireland+'</b>rest of Ireland</span>'+
-    (c.fix?'<span class="warn"><b>'+c.fix+'</b>to check, highlighted below</span>':'<span><b>✓</b>every address checked</span>');
-  $('to3').disabled = !c.total || c.fix>0;
-  $('to3').textContent = c.fix ? 'Fix '+c.fix+' to continue' : 'Choose packages';
+    (c.fix?'<span class="warn"><b>'+c.fix+'</b>to check, highlighted below</span>':'<span><b>✓</b>every address checked</span>')+
+    (short?'<span class="warn"><b>'+short+'</b>more '+(short===1?'name':'names')+' needed: Launch Day starts at '+CONFIG.minimum+'</span>':'');
+  $('to3').disabled = !c.total || c.fix>0 || short>0;
+  $('to3').textContent = short ? 'Add at least '+CONFIG.minimum+' names' : c.fix ? 'Fix '+c.fix+' to continue' : 'Choose packages';
 }
 document.querySelector('#tbl tbody').addEventListener('input', function(e){
   var t=e.target; if(!t.dataset.f) return;
@@ -628,7 +631,7 @@ function renderPrice(){
     return {label:x.from+(to?'–'+to:'+'), d:x.dublin, r:x.ireland, from:x.from};
   }));
   var cur=tierFor(c.total).from;
-  rows=rows.filter(function(r){ return r.from>0; });   // Launch Day starts at 5 names
+  rows=rows.filter(function(r){ return r.from>0; });   // Launch Day starts at the minimum list size
   $('tiers').innerHTML='<table><thead><tr><th>Names on your list</th><th>Per Dublin delivery</th></tr></thead><tbody>'+
     rows.map(function(r){ return '<tr'+(r.from===cur?' class="cur"':'')+'><td>'+r.label+'</td><td>'+euro(r.d)+'</td></tr>'; }).join('')+
     '</tbody></table><span class="sample">Prices per delivery, excluding VAT. Deliveries outside Dublin are quoted separately.</span>';
