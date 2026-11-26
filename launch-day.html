@@ -40,6 +40,14 @@ button,input,select{font:inherit;color:inherit}
 .help strong{color:var(--text);font-weight:500}
 
 /* intro */
+.xmas{margin-top:28px;border:1px solid #4a3c00;background:#141107;border-radius:14px;padding:22px clamp(18px,3vw,28px);display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center}
+.xmas h2{font-size:clamp(24px,3vw,34px);margin:0 0 6px;color:var(--yellow)}
+.xmas p{margin:0;color:#e9dfb8;max-width:62ch}
+.xmas .cut{text-align:right;white-space:nowrap}
+.xmas .cut span{display:block;font-size:14px;color:#c9bb86}
+.xmas .cut b{display:block;font-size:22px;letter-spacing:-.01em}
+@media (max-width:700px){.xmas{grid-template-columns:1fr}.xmas .cut{text-align:left}}
+.datewarn{color:var(--warn);font-size:14px;margin-top:6px}
 .intro{padding:48px 0 36px;display:grid;grid-template-columns:1.3fr 1fr;gap:40px;align-items:end}
 .intro h1{font-size:clamp(40px,6.4vw,84px);line-height:.95;letter-spacing:-.045em;margin:0;font-weight:700}
 .intro p{color:#d6d6d6;margin:0;max-width:44ch}
@@ -192,6 +200,14 @@ ol.names li.done .st{color:var(--text)}
     <a class="help" href="tel:014757000">Questions? <strong>01 475 7000</strong></a>
   </header>
 
+  <aside class="xmas" id="xmas" hidden>
+    <div>
+      <h2>Christmas gifts, delivered to every name on your list.</h2>
+      <p>Client hampers, team gifts and festive press drops, across Dublin and Ireland. December books up quickly, so the earlier you plan your send, the better.</p>
+    </div>
+    <div class="cut"><span>Last delivery days before Christmas</span><b id="xmasdate">Dublin: Monday 21 December</b><span id="xmasnat" style="color:#e9dfb8;font-size:16px;margin-top:2px">Rest of Ireland: Friday 18 December</span></div>
+  </aside>
+
   <div class="intro">
     <h1>You’ve done the hard part. We’ll take it from here.</h1>
     <p>Upload your list, choose your launch day, and follow every delivery in one place, with proof for each one ready to share with your client.</p>
@@ -213,7 +229,7 @@ ol.names li.done .st{color:var(--text)}
       <div class="grid">
         <label class="f"><span>Campaign name</span><input type="text" id="campaign" placeholder="e.g. Spring Glow launch"></label>
         <label class="f"><span>Your client <em>(optional, for the report)</em></span><input type="text" id="client" placeholder="e.g. Lumière Skincare"></label>
-        <label class="f"><span>Launch day</span><input type="date" id="date"></label>
+        <label class="f"><span>Launch day</span><input type="date" id="date"><span class="datewarn" id="datewarn" hidden></span></label>
         <div class="f"><span class="note" style="display:block;margin-bottom:6px">Deliveries land</span>
           <div class="seg" id="window">
             <button data-v="Morning" class="on">Morning</button><button data-v="Afternoon">Afternoon</button><button data-v="Any time">Any time that day</button>
@@ -352,7 +368,9 @@ var CONFIG = {
     {id:'box',  name:'Small box',  kg:2, note:'Up to 2 kg'},
     {id:'bottle',name:'Bottle box',kg:3, note:'Champagne, wine, spirits'},
     {id:'hamper',name:'Hamper',    kg:6, note:'Up to 6 kg'}
-  ]
+  ],
+  // Christmas: the banner, the extra option and the date check show until the last delivery day, then switch off by themselves
+  christmas: {lastDay:'2026-12-21', lastDayText:'Monday 21 December', nationalLastDay:'2026-12-18', nationalLastDayText:'Friday 18 December', reopen:'2027-01-04'}
 };
 // Dublin addresses go same day; everything else travels nationwide
 var DUBLIN_KEYS = ['D01','D02','D03','D04','D05','D06','D6W','D07','D08','D09','D10','D11','D12','D13','D14','D15','D16','D17','D18','D20','D22','D24','A94','A96','K32','K34','K36','K45','K56','K67','K78','A41','A42','A45'];
@@ -386,8 +404,24 @@ $('window').addEventListener('click', function(e){
 $('to2').addEventListener('click', function(){
   if(!$('campaign').value.trim()){ $('s1msg').textContent = 'Add a campaign name to continue.'; $('campaign').focus(); return; }
   if(!$('collect').value.trim()){ $('s1msg').textContent = 'Add the address we collect from.'; $('collect').focus(); return; }
+  if(!checkDate()){ $('s1msg').textContent = 'Choose a launch day on or before '+CONFIG.christmas.lastDayText+', or in the new year.'; $('date').focus(); return; }
   $('s1msg').textContent=''; go(2);
 });
+/* Christmas season */
+var today=new Date().toISOString().slice(0,10), XMAS = today <= CONFIG.christmas.lastDay;
+if(XMAS){ $('xmas').hidden=false; $('xmasdate').textContent='Dublin: '+CONFIG.christmas.lastDayText; $('xmasnat').textContent='Rest of Ireland: '+CONFIG.christmas.nationalLastDayText; }
+// a launch day after the nationwide cut-off is fine for Dublin, but not for names elsewhere in Ireland
+function lateForNationwide(){ var v=$('date').value; return v > CONFIG.christmas.nationalLastDay && v < CONFIG.christmas.reopen; }
+function checkDate(){
+  var v=$('date').value, bad = v > CONFIG.christmas.lastDay && v < CONFIG.christmas.reopen;
+  $('datewarn').hidden=!bad;
+  if(bad) $('datewarn').textContent='Our last delivery day before Christmas is '+CONFIG.christmas.lastDayText+' in Dublin. Choose that day or earlier, or a date from '+new Date(CONFIG.christmas.reopen+'T09:00:00').toLocaleDateString('en-IE',{day:'numeric',month:'long'})+'.';
+  else if(lateForNationwide()){ $('datewarn').hidden=false; $('datewarn').style.color='#e9dfb8'; $('datewarn').textContent='Dublin only: deliveries elsewhere in Ireland need to go by '+CONFIG.christmas.nationalLastDayText+'.'; if(state.rows && state.rows.length) renderSummary(); return true; }
+  $('datewarn').style.color='';
+  if(state.rows && state.rows.length) renderSummary();
+  return !bad;
+}
+$('date').addEventListener('change', checkDate);
 
 /* ---------- 2. list ---------- */
 var FIELDS = ['name','company','a1','a2','town','county','eircode','phone','ref','packages'];
@@ -544,12 +578,13 @@ function counts(){
   return c;
 }
 function renderSummary(){
-  var c=counts(), short=Math.max(0, CONFIG.minimum - c.total);
+  var c=counts(), short=Math.max(0, CONFIG.minimum - c.total), late=c.ireland>0 && lateForNationwide();
   $('summary').innerHTML='<span><b>'+c.total+'</b>names</span><span><b>'+c.dublin+'</b>in Dublin</span><span><b>'+c.ireland+'</b>rest of Ireland</span>'+
     (c.fix?'<span class="warn"><b>'+c.fix+'</b>to check, highlighted below</span>':'<span><b>✓</b>every address checked</span>')+
-    (short?'<span class="warn"><b>'+short+'</b>more '+(short===1?'name':'names')+' needed: Launch Day starts at '+CONFIG.minimum+'</span>':'');
-  $('to3').disabled = !c.total || c.fix>0 || short>0;
-  $('to3').textContent = short ? 'Add at least '+CONFIG.minimum+' names' : c.fix ? 'Fix '+c.fix+' to continue' : 'Choose packages';
+    (short?'<span class="warn"><b>'+short+'</b>more '+(short===1?'name':'names')+' needed: Launch Day starts at '+CONFIG.minimum+'</span>':'')+
+    (late?'<span class="warn" style="flex-basis:100%">Deliveries outside Dublin need to go by '+CONFIG.christmas.nationalLastDayText+'. Move your launch day to that date or earlier (in step 1), or send the '+c.ireland+' outside Dublin separately.</span>':'');
+  $('to3').disabled = !c.total || c.fix>0 || short>0 || late;
+  $('to3').textContent = short ? 'Add at least '+CONFIG.minimum+' names' : c.fix ? 'Fix '+c.fix+' to continue' : late ? 'Change your launch day' : 'Choose packages';
 }
 document.querySelector('#tbl tbody').addEventListener('input', function(e){
   var t=e.target; if(!t.dataset.f) return;
@@ -583,6 +618,7 @@ renderPacks();
 
 /* what's inside, and how to handle it: picked from a list so clients without a finished pack can still describe it */
 var CONTENTS=['Beauty and skincare','Fragrance','Champagne, wine or spirits','Chocolates or food','Flowers or plants','Fashion and accessories','Tech or gadgets','Books or print','Homeware or candles','Mixed gift box','Something else'];
+if(new Date().toISOString().slice(0,10) <= CONFIG.christmas.lastDay) CONTENTS.unshift('Christmas gift or hamper');
 var CARE=['Glass or fragile','Keep upright','Perishable, deliver promptly','Contains alcohol: recipient must be 18 or over','High value','Unusually large or heavy'];
 // picking a type suggests the handling that usually goes with it; the client can untick
 var SUGGEST={'Fragrance':['Glass or fragile'],'Champagne, wine or spirits':['Glass or fragile','Keep upright','Contains alcohol: recipient must be 18 or over'],'Chocolates or food':['Perishable, deliver promptly'],'Flowers or plants':['Keep upright','Perishable, deliver promptly'],'Homeware or candles':['Glass or fragile'],'Tech or gadgets':['High value']};

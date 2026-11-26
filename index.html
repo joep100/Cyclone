@@ -157,6 +157,8 @@ a:focus-visible{outline:3px solid #FFCC00;outline-offset:4px}
 </div>
 <p style="margin: clamp(18px, 2vw, 28px) 0 0; font-family: 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; line-height: 1.6; letter-spacing: 0.02em; color: #8a8a8a">Based on 573 Standard and Priority deliveries, 1 to 14 October 2026. City centre means Dublin 1 and 2. Typical means the median job.</p>
 <p style="margin: 18px 0 0; font-family: 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.6; letter-spacing: 0.02em; color: #e6e6e6">Our Shared service carries several deliveries on each run, so each one carries around 80% less carbon. <a href="/carbon-share.html" style="color: #FFCC00; text-decoration: none; white-space: nowrap">See your Carbon Share &rarr;</a></p>
+<p data-season="christmas" style="margin: 10px 0 0; font-family: 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.6; letter-spacing: 0.02em; color: #e6e6e6">Sending Christmas gifts to a list? Launch Day delivers to every name on it, up to Monday 21 December in Dublin and Friday 18 December elsewhere in Ireland. <a href="/launch-day.html" style="color: #FFCC00; text-decoration: none; white-space: nowrap">Plan your Christmas send &rarr;</a></p>
+<script>/* the Christmas line takes itself down after the last delivery day */ if (new Date().toISOString().slice(0,10) > '2026-12-21') document.querySelectorAll('[data-season="christmas"]').forEach(function (e) { e.remove(); });</script>
 </section>
 
 <section id="why2" aria-label="Why Cyclone" style="padding: clamp(68px, 8.5vw, 136px) clamp(17px, 3.4vw, 54.4px)">
