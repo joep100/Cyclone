@@ -237,6 +237,7 @@ ol.names li.done .st{color:var(--text)}
         <small>Excel or CSV. One row per person.</small>
       </label>
       <input type="file" id="file" class="sr-only" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv">
+      <p class="note" id="filemsg" role="status" style="margin:12px 0 0"></p>
       <div class="row-tools">
         <button class="btn ghost small" id="template">Download our template</button>
         <button class="btn ghost small" id="sample">Try it with a sample list</button>
@@ -446,27 +447,39 @@ function tidy(r){
   return r;
 }
 function loadRows(aoa){
-  var hi = 0;
+  var hi = -1;
   // the header row is the first row with three or more filled cells
-  for(var i=0;i<Math.min(aoa.length,10);i++){ if(aoa[i].filter(function(c){return String(c).trim();}).length>=3){ hi=i; break; } }
+  for(var i=0;i<Math.min(aoa.length,15);i++){ if(aoa[i].filter(function(c){return String(c).trim();}).length>=3){ hi=i; break; } }
+  if(hi<0) return 0;
   var headers = aoa[hi]||[], m = mapHeaders(headers);
   var rows = [];
   for(var j=hi+1;j<aoa.length;j++){
     var line = aoa[j]; if(!line || !line.some(function(c){return String(c).trim();})) continue;
     var r = {};
     FIELDS.forEach(function(f){ r[f] = m[f]!=null ? String(line[m[f]]==null?'':line[m[f]]).trim() : ''; });
+    if(!FIELDS.some(function(f){ return r[f]; })) continue;
     rows.push(tidy(r));
   }
-  state.rows = rows; renderList();
+  if(!rows.length) return 0;
+  state.rows = rows; renderList(); return rows.length;
 }
 function readFile(f){
+  var msg=$('filemsg');
+  msg.style.color=''; msg.textContent='Reading '+f.name+'…';
+  if(typeof XLSX==='undefined'){ msg.style.color='var(--warn)'; msg.textContent='The spreadsheet reader didn’t load. Refresh the page and try again, or use “Add a name”.'; return; }
   var reader = new FileReader();
+  reader.onerror = function(){ msg.style.color='var(--warn)'; msg.textContent='That file couldn’t be opened. Save it as Excel (.xlsx) or CSV and try again.'; };
   reader.onload = function(e){
     try{
-      var wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
-      var ws = wb.Sheets[wb.SheetNames[0]];
-      loadRows(XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:false}));
-    }catch(err){ alert('That file couldn’t be read. Save it as Excel (.xlsx) or CSV and try again.'); }
+      var wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'}), n=0, used='';
+      // use the first sheet that has a list on it
+      for(var s=0;s<wb.SheetNames.length && !n;s++){
+        n = loadRows(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[s]], {header:1, defval:'', raw:false, blankrows:false}));
+        if(n) used=wb.SheetNames[s];
+      }
+      if(n){ msg.textContent=n+' '+(n===1?'name':'names')+' read from '+f.name+(wb.SheetNames.length>1?' (sheet “'+used+'”)':'')+'.'; }
+      else { msg.style.color='var(--warn)'; msg.textContent='No names found in '+f.name+'. Check it has a heading row (Name, Address, Eircode and so on) with one row per person underneath.'; }
+    }catch(err){ msg.style.color='var(--warn)'; msg.textContent='That file couldn’t be read. Save it as Excel (.xlsx) or CSV and try again.'; }
   };
   reader.readAsArrayBuffer(f);
 }
