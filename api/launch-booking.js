@@ -38,7 +38,9 @@ module.exports = async (req, res) => {
   let b = req.body;
   if (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = null; } }
   if (!b || typeof b !== 'object') { res.status(400).json({ ok: false, error: 'No booking received.' }); return; }
-  if (b.website) { res.status(200).json({ ok: true }); return; }   // spam trap: real people never fill this hidden box
+  // spam trap: a hidden box real people never see. Browsers' autofill can fill it by mistake,
+  // so rather than drop the booking, it still goes through with a note in the subject.
+  const flagged = !!b.website;
 
   const rows = Array.isArray(b.rows) ? b.rows.slice(0, 500) : [];
   const email = String(b.email || '').trim();
@@ -82,7 +84,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    await send({ from: FROM, to: TO, ...(DOMAIN_VERIFIED && CC.length ? { cc: CC } : {}), reply_to: email, subject: `Launch Day booking ${ref}: ${b.campaign} (${rows.length} deliveries, ${b.dateText})`, html: opsHtml, attachments });
+    await send({ from: FROM, to: TO, ...(DOMAIN_VERIFIED && CC.length ? { cc: CC } : {}), reply_to: email, subject: `${flagged ? '[Check: possible spam] ' : ''}Launch Day booking ${ref}: ${b.campaign} (${rows.length} deliveries, ${b.dateText})`, html: opsHtml, attachments });
   } catch (e) {
     res.status(502).json({ ok: false, error: 'Your booking could not be sent. Please call 01 475 7000.', detail: String(e.message || e) });
     return;
