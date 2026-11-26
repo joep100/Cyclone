@@ -52,8 +52,10 @@ module.exports = async (req, res) => {
   const product = b.product === 'christmas' ? 'Christmas gifts' : 'Launch Day';
   const ref = (b.product === 'christmas' ? 'XM-' : 'LD-') + new Date().toISOString().slice(2, 10).replace(/-/g, '') + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
   const q = b.quote || {};
+  const hasItems = rows.some((r) => r.items != null);
+  const units = q.units || rows.length, unitName = q.unitName === 'item' ? 'items' : 'deliveries';
   const listRows = rows.map((r, i) =>
-    `<tr><td>${i + 1}</td><td>${esc(r.name)}</td><td>${esc(r.company)}</td><td>${esc([r.a1, r.a2, r.town, r.county].filter(Boolean).join(', '))}</td><td>${esc(r.eircode)}</td><td>${esc(r.phone)}</td><td>${esc(r.area)}</td></tr>`
+    `<tr><td>${i + 1}</td><td>${esc(r.name)}</td><td>${esc(r.company)}</td><td>${esc([r.a1, r.a2, r.town, r.county].filter(Boolean).join(', '))}</td><td>${esc(r.eircode)}</td><td>${esc(r.phone)}</td>${hasItems ? `<td>${esc(r.items)}</td>` : ''}<td>${esc(r.area)}</td></tr>`
   ).join('');
 
   const opsHtml = `
@@ -65,15 +67,15 @@ module.exports = async (req, res) => {
       <tr><td><b>For their client</b></td><td>${esc(b.client || '—')}</td></tr>
       <tr><td><b>Launch day</b></td><td>${esc(b.dateText)}, ${esc(b.window)}</td></tr>
       <tr><td><b>Collect from</b></td><td>${esc(b.collect)}</td></tr>
-      <tr><td><b>Deliveries</b></td><td>${rows.length} (${esc(q.dublin)} Dublin, ${esc(q.ireland)} elsewhere)</td></tr>
+      <tr><td><b>Deliveries</b></td><td>${rows.length} ${rows.length === 1 ? 'address' : 'addresses'}${hasItems ? ', ' + units + ' items' : ''} (${esc(q.dublin)} Dublin, ${esc(q.ireland)} elsewhere)</td></tr>
       <tr><td><b>Packages</b></td><td>${esc(b.pack)}, ${esc(b.perPerson)} per person</td></tr>
       <tr><td><b>What's inside</b></td><td>${esc(b.contents || 'Not given')}</td></tr>
-      ${b.quoted ? `<tr><td><b>Number quoted</b></td><td>${esc(b.quoted)}${Number(b.quoted) !== rows.length ? ' (list has ' + rows.length + ')' : ''}</td></tr>` : ''}
-      <tr><td><b>Price</b></td><td>${rows.length} × ${euro(q.perDelivery)} = ${euro(q.net)} + VAT ${euro(q.vat)} = <b>${euro(q.gross)}</b></td></tr>
+      ${b.quoted ? `<tr><td><b>Number quoted</b></td><td>${esc(b.quoted)}${Number(b.quoted) !== units ? ' (list has ' + units + ')' : ''}</td></tr>` : ''}
+      <tr><td><b>Price</b></td><td>${units} ${unitName} × ${euro(q.perDelivery)} = ${euro(q.net)} + VAT ${euro(q.vat)} = <b>${euro(q.gross)}</b></td></tr>
       <tr><td><b>Packing agreed</b></td><td>${b.packingAgreed ? 'Yes: packed for transport and labelled' : 'No'}</td></tr>
     </table>
     <table cellpadding="5" style="border-collapse:collapse;font-size:13px" border="1" bordercolor="#ddd">
-      <tr style="background:#f4f4f4"><th>#</th><th>Name</th><th>Company</th><th>Address</th><th>Eircode</th><th>Phone</th><th>Area</th></tr>
+      <tr style="background:#f4f4f4"><th>#</th><th>Name</th><th>Company</th><th>Address</th><th>Eircode</th><th>Phone</th>${hasItems ? '<th>Items</th>' : ''}<th>Area</th></tr>
       ${listRows}
     </table>
   </div>`;
@@ -86,7 +88,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    await send({ from: FROM, to: TO, ...(DOMAIN_VERIFIED && CC.length ? { cc: CC } : {}), reply_to: email, subject: `${flagged ? '[Check: possible spam] ' : ''}${product} booking ${ref}: ${b.campaign} (${rows.length} deliveries, ${b.dateText})`, html: opsHtml, attachments });
+    await send({ from: FROM, to: TO, ...(DOMAIN_VERIFIED && CC.length ? { cc: CC } : {}), reply_to: email, subject: `${flagged ? '[Check: possible spam] ' : ''}${product} booking ${ref}: ${b.campaign} (${hasItems ? units + ' items' : rows.length + ' deliveries'}, ${b.dateText})`, html: opsHtml, attachments });
   } catch (e) {
     res.status(502).json({ ok: false, error: 'Your booking could not be sent. Please call 01 475 7000.', detail: String(e.message || e) });
     return;
@@ -98,7 +100,7 @@ module.exports = async (req, res) => {
     const clientHtml = `
     <div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#111;max-width:560px">
       <h2 style="margin:0 0 8px">${b.product === 'christmas' ? 'Your Christmas deliveries are booked' : 'Your launch is booked'}: ${esc(b.campaign)}</h2>
-      <p>Thanks${b.contactName ? ' ' + esc(String(b.contactName).split(' ')[0]) : ''}. We’ve received your list of ${rows.length} and our team will be in touch to confirm the details.</p>
+      <p>Thanks${b.contactName ? ' ' + esc(String(b.contactName).split(' ')[0]) : ''}. We’ve received your list of ${hasItems ? units + ' items to ' + rows.length + ' addresses' : rows.length} and our team will be in touch to confirm the details.</p>
       <p><b>${b.product === 'christmas' ? 'Delivery day' : 'Launch day'}:</b> ${esc(b.dateText)}, ${esc(b.window)}<br><b>Collect from:</b> ${esc(b.collect)}<br><b>Price:</b> ${euro(q.gross)} including VAT<br><b>Your reference:</b> ${ref}</p>
       <p>Please make sure every pack is packed for transport and labelled with the recipient’s name and address.</p>
       <p>Questions? Reply to this email or call us on 01 475 7000.</p>

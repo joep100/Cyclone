@@ -132,12 +132,12 @@ input:focus,select:focus{border-color:var(--yellow)}
 .summary .warn,.summary .warn b{color:var(--warn)}
 .summary .gold{color:var(--gold-text);flex-basis:100%}
 .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
-table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:1240px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:1320px}
 th{text-align:left;font-weight:500;color:var(--muted);padding:10px;border-bottom:1px solid var(--line);white-space:nowrap;background:#070707}
 td{padding:4px 6px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
 td input{background:transparent;border:1px solid transparent;border-radius:6px;padding:7px 6px;width:100%;min-width:90px}
 td input[data-f=name],td input[data-f=company]{min-width:150px}td input[data-f=a1]{min-width:200px}td input[data-f=a2]{min-width:140px}
-td input[data-f=town]{min-width:110px}td input[data-f=county],td input[data-f=eircode]{min-width:96px}td input[data-f=phone]{min-width:122px}
+td input[data-f=items]{min-width:56px;max-width:70px;text-align:center}td input[data-f=town]{min-width:110px}td input[data-f=county],td input[data-f=eircode]{min-width:96px}td input[data-f=phone]{min-width:122px}
 td input:hover{border-color:var(--line)}
 td input.bad{border-color:var(--warn);background:rgba(255,138,101,.07)}
 td.area{font-family:var(--mono);font-size:13px;color:var(--muted);white-space:nowrap}
@@ -186,7 +186,7 @@ td .del{background:none;border:0;color:var(--dim);cursor:pointer;font-size:18px;
       <h1>Your Christmas gifts, delivered to <em>every name on your list.</em></h1>
     </div>
     <div>
-      <p>Hampers, bottles and gift boxes for clients, partners and your team, anywhere in Ireland. One price per delivery. Tell us how many and get your price now.</p>
+      <p>Hampers, bottles and gift boxes for clients, partners and your team, anywhere in Ireland. One price per item. Tell us how many and get your price now.</p>
       <div class="cuts"><span>Last delivery days: <b>Dublin, Monday 21 December</b></span><span><b>Rest of Ireland, Friday 18 December</b></span></div>
     </div>
   </div>
@@ -203,12 +203,12 @@ td .del{background:none;border:0;color:var(--dim);cursor:pointer;font-size:18px;
     <div class="card">
       <div class="quote">
         <div>
-          <div class="q">How many deliveries?<small>One delivery is one address. Five or more.</small></div>
+          <div class="q">How many items?<small>Each hamper, bottle, box or bag counts as one item. Five or more.</small></div>
           <div class="count">
             <button type="button" id="minus" aria-label="One fewer">−</button>
-            <input type="number" id="qty" min="1" max="999" value="20" inputmode="numeric" aria-label="Number of deliveries">
+            <input type="number" id="qty" min="1" max="999" value="20" inputmode="numeric" aria-label="Number of items">
             <button type="button" id="plus" aria-label="One more">+</button>
-            <span>deliveries</span>
+            <span>items</span>
           </div>
           <div class="mprice" id="mprice" aria-hidden="true"></div>
 
@@ -224,16 +224,16 @@ td .del{background:none;border:0;color:var(--dim);cursor:pointer;font-size:18px;
         </div>
 
         <aside class="pricebox" aria-live="polite">
-          <div class="lbl">Your price per delivery</div>
+          <div class="lbl">Your price per item</div>
           <div class="per" id="per">€20<small>each</small></div>
-          <div class="tot"><span>For <span id="qtytxt">20</span> deliveries</span><b id="total">€400.00</b></div>
+          <div class="tot"><span>For <span id="qtytxt">20</span> items</span><b id="total">€400.00</b></div>
           <div class="vat" id="vat">plus VAT</div>
           <div class="nudge" id="nudge" hidden></div>
           <div class="min" id="min" hidden></div>
           <div class="ladder" id="ladder"></div>
         </aside>
       </div>
-      <div class="actions"><span class="note">Same price anywhere in Ireland. No list needed yet.</span><button class="btn" id="to2">Book these deliveries</button></div>
+      <div class="actions"><span class="note">Same price anywhere in Ireland. No list needed yet.</span><button class="btn" id="to2">Book these items</button></div>
     </div>
   </section>
 
@@ -258,7 +258,7 @@ td .del{background:none;border:0;color:var(--dim);cursor:pointer;font-size:18px;
   <section class="step" id="s3">
     <div class="card">
       <h2>Your list</h2>
-      <p class="sub">Fill in our template with one row per delivery, then upload it here. We’ll check every address and flag anything that needs a second look.</p>
+      <p class="sub">Fill in our template with one row per address, and how many items go there, then upload it here. We’ll check every address and flag anything that needs a second look.</p>
       <div class="tplbox">
         <div><b>1. Download the template</b><p>An Excel sheet with the columns we need, and an example row.</p></div>
         <button class="btn small" id="template">Download template</button>
@@ -269,7 +269,7 @@ td .del{background:none;border:0;color:var(--dim);cursor:pointer;font-size:18px;
       <div class="row-tools"><button class="btn ghost small" id="addrow">Or type them in</button><button class="btn ghost small" id="sample">See an example</button></div>
       <div id="listarea" hidden>
         <div class="summary" id="summary"></div>
-        <div class="tablewrap"><table id="tbl"><thead><tr><th>Name</th><th>Company</th><th>Address line 1</th><th>Address line 2</th><th>Town</th><th>County</th><th>Eircode</th><th>Phone</th><th>Area</th><th>Check</th><th></th></tr></thead><tbody></tbody></table></div>
+        <div class="tablewrap"><table id="tbl"><thead><tr><th>Name</th><th>Company</th><th>Address line 1</th><th>Address line 2</th><th>Town</th><th>County</th><th>Eircode</th><th>Phone</th><th>Items</th><th>Area</th><th>Check</th><th></th></tr></thead><tbody></tbody></table></div>
       </div>
       <div class="actions"><button class="btn ghost" data-back="2">Back</button><button class="btn" id="to4" disabled>Upload your list</button></div>
     </div>
@@ -355,16 +355,16 @@ function renderPrice(){
   $('total').textContent=euro(n*t.price);
   $('vat').textContent='plus VAT ('+euro(n*t.price*CONFIG.vat)+'), '+euro(n*t.price*(1+CONFIG.vat))+' in total';
   $('min').hidden = n>=CONFIG.minimum;
-  $('min').textContent='Our Christmas service starts at '+CONFIG.minimum+' deliveries.';
+  $('min').textContent='Our Christmas service starts at '+CONFIG.minimum+' items.';
   var close = nx && n>=CONFIG.minimum && (nx.from-n)<=Math.max(5,Math.ceil(n*0.3));
   $('nudge').hidden=!close;
-  if(close) $('nudge').textContent='Add '+(nx.from-n)+' more and every delivery drops to '+euroShort(nx.price)+'.';
+  if(close) $('nudge').textContent='Add '+(nx.from-n)+' more and every item drops to '+euroShort(nx.price)+'.';
   $('ladder').innerHTML=CONFIG.tiers.map(function(x,i){
     var to=CONFIG.tiers[i+1]?CONFIG.tiers[i+1].from-1:null;
-    return '<div class="'+(x===t&&n>=CONFIG.minimum?'cur':'')+'"><span>'+x.from+(to?'–'+to:'+')+' deliveries</span><span>'+euroShort(x.price)+' each</span></div>';
+    return '<div class="'+(x===t&&n>=CONFIG.minimum?'cur':'')+'"><span>'+x.from+(to?'–'+to:'+')+' items</span><span>'+euroShort(x.price)+' each</span></div>';
   }).join('');
   $('to2').disabled = n<CONFIG.minimum;
-  $('mprice').innerHTML = n>=CONFIG.minimum ? '<b>'+euroShort(t.price)+' each</b> &nbsp;·&nbsp; '+euro(n*t.price)+' plus VAT' : 'Our Christmas service starts at '+CONFIG.minimum+' deliveries.';
+  $('mprice').innerHTML = n>=CONFIG.minimum ? '<b>'+euroShort(t.price)+' each</b> &nbsp;·&nbsp; '+euro(n*t.price)+' plus VAT' : 'Our Christmas service starts at '+CONFIG.minimum+' items.';
 }
 $('qty').addEventListener('input', renderPrice);
 $('minus').addEventListener('click', function(){ $('qty').value=Math.max(1,qty()-1); renderPrice(); });
@@ -416,7 +416,7 @@ $('to3').addEventListener('click', function(){
 });
 
 /* ---------- 3. the list ---------- */
-var FIELDS=['name','company','a1','a2','town','county','eircode','phone','gift'];
+var FIELDS=['name','company','a1','a2','town','county','eircode','phone','items','gift'];
 var SYN={
   name:['name','recipient','recipient name','contact','deliver contact','full name'],
   company:['company','company name','organisation','organization'],
@@ -426,6 +426,7 @@ var SYN={
   county:['county','co','co.'],
   eircode:['eircode','postcode','post code','postal code'],
   phone:['phone','mobile','telephone','tel','deliver phone','phone number'],
+  items:['items','number of items','qty','quantity','# of packages','packages','no of items'],
   gift:['gift','gift (optional)','what they get','your ref','reference','notes']
 };
 function norm(h){ return String(h||'').toLowerCase().replace(/\(.*?\)/g,'').replace(/[^a-z0-9#/ ]/g,' ').replace(/\s+/g,' ').trim(); }
@@ -455,11 +456,13 @@ function check(r){
   var dg=String(r.phone||'').replace(/\D/g,'');
   if(!dg) x.push({f:'phone',t:'Add a phone number'}); else if(dg.length<7) x.push({f:'phone',t:'Check the phone number'});
   if(r.eircode && EIRCODE.test(r.eircode.trim()) && areaOf(r.eircode)==='ireland' && !r.county) x.push({f:'county',t:'Add the county'});
+  if(!/^\d{1,3}$/.test(String(r.items).trim()) || +r.items<1) x.push({f:'items',t:'Check the number of items'});
   return x;
 }
 function tidy(r){
   if(r.eircode){ var e=r.eircode.toUpperCase().replace(/\s/g,''); if(e.length===7) r.eircode=e.slice(0,3)+' '+e.slice(3); }
   if(!r.county && areaOf(r.eircode)==='dublin') r.county='Dublin';
+  if(r.items===undefined || String(r.items).trim()==='') r.items='1';   // one item each, unless the list says otherwise
   return r;
 }
 function loadRows(aoa){
@@ -486,7 +489,7 @@ function readFile(f){
     try{
       var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'}), n=0;
       for(var s=0;s<wb.SheetNames.length && !n;s++) n=loadRows(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[s]],{header:1,defval:'',raw:false,blankrows:false}));
-      if(n) msg.textContent=n+' '+(n===1?'delivery':'deliveries')+' read from '+f.name+'.';
+      if(n) msg.textContent=n+' '+(n===1?'address':'addresses')+' read from '+f.name+'.';
       else { msg.style.color='var(--warn)'; msg.textContent='No names found in '+f.name+'. Fill in the template with one row per delivery and try again.'; }
     }catch(err){ msg.style.color='var(--warn)'; msg.textContent='That file couldn’t be read. Save it as Excel (.xlsx) or CSV and try again.'; }
   };
@@ -501,10 +504,10 @@ drop.addEventListener('drop', function(e){ if(e.dataTransfer.files[0]) readFile(
 $('template').addEventListener('click', function(){
   if(typeof XLSX==='undefined'){ alert('The template couldn’t be prepared. Refresh the page and try again.'); return; }
   var ws=XLSX.utils.aoa_to_sheet([
-    ['Name','Company','Address line 1','Address line 2','Town','County','Eircode','Phone','Gift (optional)'],
-    ['Aoife Byrne','Example Ltd','Unit 4, The Courtyard','Harcourt Road','Dublin 2','Dublin','D02 XY45','0871234567','Large hamper']
+    ['Name','Company','Address line 1','Address line 2','Town','County','Eircode','Phone','Items','Gift (optional)'],
+    ['Aoife Byrne','Example Ltd','Unit 4, The Courtyard','Harcourt Road','Dublin 2','Dublin','D02 XY45','0871234567',1,'Large hamper']
   ]);
-  ws['!cols']=[{wch:20},{wch:22},{wch:28},{wch:22},{wch:14},{wch:12},{wch:11},{wch:14},{wch:18}];
+  ws['!cols']=[{wch:20},{wch:22},{wch:28},{wch:22},{wch:14},{wch:12},{wch:11},{wch:14},{wch:7},{wch:18}];
   var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Your list');
   XLSX.writeFile(wb,'cyclone-christmas-list-template.xlsx');
 });
@@ -513,14 +516,14 @@ $('sample').addEventListener('click', function(){
   var ln=['Byrne','Kelly','Murphy','Walsh','Doyle','Ryan','Nolan','Kavanagh','Brennan','Quinn','Burke','Lynch','Carroll','Hayes','Moran','Kenny','Power','Keane','Dunne','Foley'];
   var ad=[['Harcourt Road','Dublin 2','','D02 XY46'],['Baggot Street Lower','Dublin 2','','D02 TN83'],['South William Street','Dublin 2','','D02 HX73'],['Ranelagh Road','Dublin 6','','D06 F2C9'],['Merrion Road','Dublin 4','','D04 K7W2'],['Clontarf Road','Dublin 3','','D03 P2R6'],['Phibsborough Road','Dublin 7','','D07 E4T2'],['Rathgar Road','Dublin 6','','D06 V8X2'],['Main Street','Malahide','','K36 T9C1'],['Main Street','Dún Laoghaire','','A96 N2H5'],['Thomas Street','Dublin 8','','D08 KT8A'],['Leeson Street','Dublin 2','','D02 VE89'],['Grand Canal Dock','Dublin 2','','D02 AP94'],['Sandymount Green','Dublin 4','','D04 W5N3'],['Main Street','Swords','','K67 A9P2'],['Templeogue Road','Dublin 6W','','D6W Y9X3'],['Patrick Street','Cork','Cork','T12 X8Y5'],['Shop Street','Galway','Galway','H91 K2N4'],['O’Connell Street','Limerick','Limerick','V94 P6R2'],['The Quay','Waterford','Waterford','X91 F3E8']];
   var co=['Arden Partners','Liffey Law','Harbour Design','North Quay Capital','Brightwork','Merrion Health',''];
-  var rows=[]; for(var i=0;i<qty() && i<ad.length;i++){ var a=ad[i]; rows.push(tidy({name:fn[i]+' '+ln[i],company:co[i%co.length],a1:(10+i*3)+' '+a[0],a2:'',town:a[1],county:a[2],eircode:a[3],phone:'08'+(5+i%3)+' '+(1000000+i*37413).toString().slice(0,7),gift:''})); }
+  var rows=[]; for(var i=0;i<Math.min(ad.length,Math.max(5,Math.round(qty()*0.8)));i++){ var a=ad[i]; rows.push(tidy({name:fn[i]+' '+ln[i],company:co[i%co.length],a1:(10+i*3)+' '+a[0],a2:'',town:a[1],county:a[2],eircode:a[3],phone:'08'+(5+i%3)+' '+(1000000+i*37413).toString().slice(0,7),items:String(i%4===0?2:1),gift:''})); }
   state.rows=rows; $('filemsg').style.color=''; $('filemsg').textContent='An example list, so you can see how it works.'; renderList();
 });
 $('addrow').addEventListener('click', function(){
-  state.rows.push({name:'',company:'',a1:'',a2:'',town:'',county:'',eircode:'',phone:'',gift:''});
+  state.rows.push({name:'',company:'',a1:'',a2:'',town:'',county:'',eircode:'',phone:'',items:'1',gift:''});
   renderList(); var ins=document.querySelectorAll('#tbl tbody tr:last-child input'); if(ins[0]) ins[0].focus();
 });
-var COLS=['name','company','a1','a2','town','county','eircode','phone'];
+var COLS=['name','company','a1','a2','town','county','eircode','phone','items'];
 function renderList(){
   $('listarea').hidden=!state.rows.length;
   var tb=document.querySelector('#tbl tbody'); tb.innerHTML='';
@@ -535,20 +538,20 @@ function renderList(){
   });
   renderSummary();
 }
-function counts(){ var c={total:state.rows.length,fix:0,dublin:0,ireland:0}; state.rows.forEach(function(r){ if(check(r).length) c.fix++; if(areaOf(r.eircode)==='dublin') c.dublin++; else c.ireland++; }); return c; }
+function counts(){ var c={total:state.rows.length,items:0,fix:0,dublin:0,ireland:0}; state.rows.forEach(function(r){ if(check(r).length) c.fix++; c.items+=Math.max(0,parseInt(r.items,10)||0); if(areaOf(r.eircode)==='dublin') c.dublin++; else c.ireland++; }); return c; }
 function renderSummary(){
-  var c=counts(), short=Math.max(0,CONFIG.minimum-c.total), late=c.ireland>0 && afterIreland(), q=qty(), h='';
-  h+='<span><b>'+c.total+'</b>deliveries</span><span><b>'+c.dublin+'</b>in Dublin</span><span><b>'+c.ireland+'</b>rest of Ireland</span>';
+  var c=counts(), short=Math.max(0,CONFIG.minimum-c.items), late=c.ireland>0 && afterIreland(), q=qty(), h='';
+  h+='<span><b>'+c.items+'</b>items</span><span><b>'+c.total+'</b>'+(c.total===1?'address':'addresses')+'</span><span><b>'+c.dublin+'</b>in Dublin</span><span><b>'+c.ireland+'</b>rest of Ireland</span>';
   h+= c.fix ? '<span class="warn"><b>'+c.fix+'</b>to check, highlighted below</span>' : '<span><b>✓</b>every address checked</span>';
-  if(short) h+='<span class="warn"><b>'+short+'</b>more needed: our Christmas service starts at '+CONFIG.minimum+'</span>';
+  if(short) h+='<span class="warn"><b>'+short+'</b>more items needed: our Christmas service starts at '+CONFIG.minimum+'</span>';
   if(late) h+='<span class="warn" style="flex-basis:100%">Deliveries outside Dublin need to go by '+CONFIG.christmas.irelandText+'. Go back to step 1 to move your delivery day, or send the '+c.ireland+' outside Dublin separately.</span>';
-  if(c.total && c.total!==q){
-    var t=tierFor(Math.max(c.total,CONFIG.minimum));
-    h+='<span class="gold">Your list has '+c.total+' and your price was for '+q+'. We’ll price it for '+c.total+': '+euroShort(t.price)+' each.</span>';
+  if(c.total && c.items!==q){
+    var t=tierFor(Math.max(c.items,CONFIG.minimum));
+    h+='<span class="gold">Your list has '+c.items+' items and your price was for '+q+'. We’ll price it for '+c.items+': '+euroShort(t.price)+' each.</span>';
   }
   $('summary').innerHTML=h;
   $('to4').disabled=!c.total || c.fix>0 || short>0 || late;
-  $('to4').textContent= !c.total ? 'Upload your list' : short ? 'Add at least '+CONFIG.minimum : c.fix ? 'Fix '+c.fix+' to continue' : late ? 'Change your delivery day' : 'Check and book';
+  $('to4').textContent= !c.total ? 'Upload your list' : short ? 'At least '+CONFIG.minimum+' items' : c.fix ? 'Fix '+c.fix+' to continue' : late ? 'Change your delivery day' : 'Check and book';
 }
 var tbody=document.querySelector('#tbl tbody');
 tbody.addEventListener('input', function(e){ var t=e.target; if(t.dataset.f) state.rows[+t.dataset.i][t.dataset.f]=t.value; });
@@ -558,8 +561,8 @@ $('to4').addEventListener('click', function(){ go(4); });
 
 /* ---------- 4. check and book ---------- */
 function finalQuote(){
-  var n=state.rows.length, t=tierFor(Math.max(n,CONFIG.minimum)), net=n*t.price;
-  return {n:n, per:t.price, net:net, vat:net*CONFIG.vat, gross:net*(1+CONFIG.vat)};
+  var n=counts().items, t=tierFor(Math.max(n,CONFIG.minimum)), net=n*t.price;   // priced per item
+  return {n:n, addresses:state.rows.length, per:t.price, net:net, vat:net*CONFIG.vat, gross:net*(1+CONFIG.vat)};
 }
 function itemObj(){ return CONFIG.items.filter(function(x){return x.id===state.item;})[0]; }
 function renderRecap(){
@@ -568,7 +571,7 @@ function renderRecap(){
     '<div><span>Sending</span><span>'+esc(it.name)+'</span></div>'+
     '<div><span>Delivery day</span><span>'+esc(niceDate($('date').value))+', '+state.windowV.toLowerCase()+'</span></div>'+
     '<div><span>Collect from</span><span>'+esc($('collect').value.trim())+'</span></div>'+
-    '<div><span>Deliveries</span><span>'+q.n+' ('+c.dublin+' in Dublin, '+c.ireland+' elsewhere)</span></div>'+
+    '<div><span>Items</span><span>'+q.n+' items to '+q.addresses+' '+(q.addresses===1?'address':'addresses')+' ('+c.dublin+' in Dublin, '+c.ireland+' elsewhere)</span></div>'+
     '<div><span>Price</span><span>'+q.n+' × '+euro(q.per)+' = '+euro(q.net)+'</span></div>'+
     '<div><span>VAT at 23%</span><span>'+euro(q.vat)+'</span></div>'+
     '<div class="total"><span>Total</span><span>'+euro(q.gross)+'</span></div>';
@@ -578,7 +581,7 @@ function importerRows(){
   var ref=(($('company').value.trim()||'Christmas')+' gifts');
   state.rows.forEach(function(r){
     out.push([r.company.slice(0,32), r.a1.slice(0,32), r.a2.slice(0,32), r.town.slice(0,32), r.county, r.eircode.slice(0,16), CONFIG.country,
-      (r.gift||ref).slice(0,32), r.name, String(r.phone).replace(/\D/g,''), 1, it.kg, CONFIG.service[areaOf(r.eircode)]||CONFIG.service.ireland]);
+      (r.gift||ref).slice(0,32), r.name, String(r.phone).replace(/\D/g,''), (parseInt(r.items,10)||1), (parseInt(r.items,10)||1)*it.kg, CONFIG.service[areaOf(r.eircode)]||CONFIG.service.ireland]);
   });
   return out;
 }
@@ -595,8 +598,8 @@ $('book').addEventListener('click', function(){
     pack:it.name, perPerson:1, quoted:qty(),
     contents:[it.name, $('notes').value.trim(), $('cphone').value.trim()?'Contact phone: '+$('cphone').value.trim():''].filter(Boolean).join('. '),
     packingAgreed:true, elapsed:Date.now()-PAGE_OPENED,
-    quote:{dublin:c.dublin, ireland:c.ireland, perDelivery:q.per, net:q.net, vat:q.vat, gross:q.gross},
-    rows:state.rows.map(function(r){ return {name:r.name, company:r.company, a1:r.a1, a2:r.a2, town:r.town, county:r.county, eircode:r.eircode, phone:r.phone, area:areaOf(r.eircode)==='dublin'?'Dublin':'Rest of Ireland'}; }),
+    quote:{dublin:c.dublin, ireland:c.ireland, perDelivery:q.per, units:q.n, unitName:'item', net:q.net, vat:q.vat, gross:q.gross},
+    rows:state.rows.map(function(r){ return {name:r.name, company:r.company, a1:r.a1, a2:r.a2, town:r.town, county:r.county, eircode:r.eircode, phone:r.phone, items:parseInt(r.items,10)||1, area:areaOf(r.eircode)==='dublin'?'Dublin':'Rest of Ireland'}; }),
     importerFile:XLSX.write(wb,{bookType:'xlsx',type:'base64'})
   };
   var btn=$('book'), msg=$('bookmsg');
